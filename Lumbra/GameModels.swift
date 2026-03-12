@@ -17,6 +17,12 @@ struct GameStateResponse: Codable {
   }
 }
 
+struct EquipmentState: Codable {
+  let weapon: InventoryItem?
+  let armor: InventoryItem?
+  let accessory: InventoryItem?
+}
+
 struct CharacterState: Codable {
   let name: String
   let hitPoints: Int
@@ -24,15 +30,14 @@ struct CharacterState: Codable {
   let attack: Int
   let defense: Int
   let experience: Int
+  let equipment: EquipmentState
   let inventory: [InventoryItem]
-  let weapon: String?
-  let armor: String?
   let effectiveAttack: Int?
   let effectiveDefense: Int?
   let activeBuffs: [ActiveBuffState]?
 
   enum CodingKeys: String, CodingKey {
-    case name, attack, defense, inventory, weapon, armor
+    case name, attack, defense, equipment, inventory
     case hitPoints = "hp"
     case maxHitPoints = "max_hp"
     case experience = "xp"

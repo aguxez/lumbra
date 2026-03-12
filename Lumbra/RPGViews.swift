@@ -435,12 +435,85 @@ struct ExpeditionPanelView: View {
   }
 }
 
+// MARK: - Equipment Section
+
+struct EquipmentSection: View {
+  let equipment: EquipmentState
+  @State private var isExpanded = true
+
+  var body: some View {
+    DisclosureGroup(isExpanded: $isExpanded) {
+      VStack(alignment: .leading, spacing: 6) {
+        slotRow(icon: "bolt.fill", label: "Weapon", item: equipment.weapon, statKey: .attack)
+        slotRow(icon: "shield.fill", label: "Armor", item: equipment.armor, statKey: .defense)
+        slotRow(icon: "ring.circle", label: "Accessory", item: equipment.accessory, statKey: .defense)
+      }
+    } label: {
+      HStack(spacing: 4) {
+        Image(systemName: "figure.arms.open")
+          .font(Theme.fontSmall)
+          .foregroundColor(.cyan)
+        Text("Equipment")
+          .font(Theme.fontSmall.bold())
+          .foregroundColor(.cyan)
+      }
+    }
+    .tint(Theme.bodyText)
+  }
+
+  private enum StatKey { case attack, defense }
+
+  private func slotRow(icon: String, label: String, item: InventoryItem?, statKey: StatKey) -> some View {
+    HStack(spacing: 6) {
+      Image(systemName: icon)
+        .font(Theme.fontTiny)
+        .foregroundColor(Theme.mutedText)
+        .frame(width: 14)
+      Text(label)
+        .font(Theme.fontSmall)
+        .foregroundColor(Theme.mutedText)
+        .frame(width: 65, alignment: .leading)
+      if let item = item {
+        Text(item.name)
+          .font(Theme.fontSmall)
+          .foregroundColor(Theme.bodyText)
+        Spacer()
+        if statKey == .attack, let atk = item.attack, atk > 0 {
+          Text("+\(atk) ATK")
+            .font(Theme.fontTiny)
+            .foregroundColor(.orange)
+        }
+        if statKey == .defense, let def = item.defense, def > 0 {
+          Text("+\(def) DEF")
+            .font(Theme.fontTiny)
+            .foregroundColor(.blue)
+        }
+        Text(item.rarity)
+          .font(Theme.fontTiny)
+          .foregroundColor(rarityColor(item.rarity))
+      } else {
+        Text("Empty")
+          .font(Theme.fontSmall)
+          .foregroundColor(Theme.mutedText.opacity(0.5))
+        Spacer()
+      }
+    }
+  }
+
+  private func rarityColor(_ rarity: String) -> Color {
+    switch rarity {
+    case "uncommon": return .green
+    case "rare": return .blue
+    case "legendary": return .purple
+    default: return Theme.mutedText
+    }
+  }
+}
+
 // MARK: - Inventory Section
 
 struct InventorySection: View {
   let items: [InventoryItem]
-  var weapon: String?
-  var armor: String?
   @State private var isExpanded = true
 
   var body: some View {
@@ -454,15 +527,6 @@ struct InventorySection: View {
           VStack(alignment: .leading, spacing: 4) {
             ForEach(items) { item in
               HStack(spacing: 4) {
-                if item.name == weapon || item.name == armor {
-                  Text("E")
-                    .font(.system(size: 9).bold())
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 1)
-                    .background(Color.blue)
-                    .cornerRadius(3)
-                }
                 Text(item.name)
                   .font(Theme.fontSmall)
                   .foregroundColor(Theme.bodyText)

@@ -6,7 +6,7 @@ import requests
 
 from combat import apply_stat_growth, resolve_round
 from config_loader import ITEMS_BY_NAME, get_zone
-from game_state import Combat, GameState, InventoryItem, Quest
+from game_state import MAX_CONSUMABLE_PER_TYPE, Combat, GameState, InventoryItem, Quest
 from world import (
     create_expedition,
     generate_hardcoded_quest,
@@ -21,22 +21,67 @@ from world import (
 )
 
 
-def auto_equip(character, item: InventoryItem):
-    if item.item_type == "weapon" and item.attack > 0:
-        current = next(
-            (i for i in character.inventory if i.name == character.weapon), None
-        )
-        if not current or item.attack > current.attack:
-            character.weapon = item.name
-            return f"Equipped {item.name} as weapon! (+{item.attack} ATK)"
-    elif item.item_type in ("armor", "shield") and item.defense > 0:
-        current = next(
-            (i for i in character.inventory if i.name == character.armor), None
-        )
-        if not current or item.defense > current.defense:
-            character.armor = item.name
-            return f"Equipped {item.name} as armor! (+{item.defense} DEF)"
-    return None
+def equip_or_stash(character, item: InventoryItem) -> list[str]:
+    """Route an item to equipment slots or inventory. Returns log messages."""
+    logs = []
+
+    if item.item_type == "weapon":
+        current = character.equipped_weapon
+        if not current:
+            character.equipped_weapon = item
+            logs.append(f"Equipped {item.name} as weapon! (+{item.attack} ATK)")
+        elif item.attack > current.attack:
+            logs.append(
+                f"Replaced {current.name} with {item.name}! (+{item.attack} ATK)"
+            )
+            character.equipped_weapon = item
+        else:
+            logs.append(f"Discarded {item.name} (weaker than {current.name}).")
+        return logs
+
+    if item.item_type in ("armor", "shield"):
+        current = character.equipped_armor
+        if not current:
+            character.equipped_armor = item
+            logs.append(f"Equipped {item.name} as armor! (+{item.defense} DEF)")
+        elif item.defense > current.defense:
+            logs.append(
+                f"Replaced {current.name} with {item.name}! (+{item.defense} DEF)"
+            )
+            character.equipped_armor = item
+        else:
+            logs.append(f"Discarded {item.name} (weaker than {current.name}).")
+        return logs
+
+    if item.item_type == "accessory":
+        current = character.equipped_accessory
+        if not current:
+            character.equipped_accessory = item
+            stat = f"+{item.attack} ATK" if item.attack else f"+{item.defense} DEF"
+            logs.append(f"Equipped {item.name} as accessory! ({stat})")
+        else:
+            new_power = item.attack + item.defense
+            old_power = current.attack + current.defense
+            if new_power > old_power:
+                logs.append(f"Replaced {current.name} with {item.name}!")
+                character.equipped_accessory = item
+            else:
+                logs.append(f"Discarded {item.name} (weaker than {current.name}).")
+        return logs
+
+    # Consumable or other item → inventory with cap
+    if item.item_type == "consumable":
+        count = sum(1 for i in character.inventory if i.name == item.name)
+        if count >= MAX_CONSUMABLE_PER_TYPE:
+            logs.append(
+                f"Inventory full for {item.name} "
+                f"(max {MAX_CONSUMABLE_PER_TYPE}). Discarded."
+            )
+            return logs
+
+    character.inventory.append(item)
+    logs.append(f"Stashed {item.name} in inventory.")
+    return logs
 
 
 SERVER_URL = "http://127.0.0.1:8234"
@@ -155,11 +200,9 @@ def tick_combat(state: GameState):
         loot = roll_loot(combat.enemy.name)
         if loot:
             item = InventoryItem.from_config(loot)
-            state.character.inventory.append(item)
             state.add_log(f"Loot: {item.name} ({item.rarity})!")
-            equip_msg = auto_equip(state.character, item)
-            if equip_msg:
-                state.add_log(equip_msg)
+            for msg in equip_or_stash(state.character, item):
+                state.add_log(msg)
 
         state.combat = None
 
@@ -208,11 +251,9 @@ def tick_quest_complete(state: GameState):
             item = InventoryItem.from_config(item_data, default_rarity="uncommon")
         else:
             item = InventoryItem(name=quest.reward_item, rarity="uncommon")
-        state.character.inventory.append(item)
         state.add_log(f"Received: {quest.reward_item}!")
-        equip_msg = auto_equip(state.character, item)
-        if equip_msg:
-            state.add_log(equip_msg)
+        for msg in equip_or_stash(state.character, item):
+            state.add_log(msg)
 
     state.quest = None
 
@@ -281,10 +322,8 @@ def tick_expeditions(state: GameState):
                 item_data = ITEMS_BY_NAME.get(item_name)
                 if item_data:
                     item = InventoryItem.from_config(item_data)
-                    state.character.inventory.append(item)
-                    equip_msg = auto_equip(state.character, item)
-                    if equip_msg:
-                        state.add_log(equip_msg)
+                    for msg in equip_or_stash(state.character, item):
+                        state.add_log(msg)
 
     # Clean up finished expeditions (keep last 5 completed for history)
     state.expeditions = [e for e in state.expeditions if e.status == "active"]

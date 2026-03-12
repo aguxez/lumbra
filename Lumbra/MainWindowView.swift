@@ -34,19 +34,26 @@ struct MainWindowView: View {
           ScrollView {
             VStack(spacing: 12) {
               CharacterCardView(character: gameState.character, zone: gameState.zone)
-              InventorySection(
-                items: gameState.character.inventory, weapon: gameState.character.weapon,
-                armor: gameState.character.armor
-              )
-              .padding(Theme.cardPadding)
-              .background(
-                RoundedRectangle(cornerRadius: Theme.cardRadius)
-                  .fill(Theme.cardBackground)
-                  .overlay(
-                    RoundedRectangle(cornerRadius: Theme.cardRadius)
-                      .strokeBorder(Theme.cardBorder, lineWidth: 1)
-                  )
-              )
+              EquipmentSection(equipment: gameState.character.equipment)
+                .padding(Theme.cardPadding)
+                .background(
+                  RoundedRectangle(cornerRadius: Theme.cardRadius)
+                    .fill(Theme.cardBackground)
+                    .overlay(
+                      RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(Theme.cardBorder, lineWidth: 1)
+                    )
+                )
+              InventorySection(items: gameState.character.inventory)
+                .padding(Theme.cardPadding)
+                .background(
+                  RoundedRectangle(cornerRadius: Theme.cardRadius)
+                    .fill(Theme.cardBackground)
+                    .overlay(
+                      RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(Theme.cardBorder, lineWidth: 1)
+                    )
+                )
             }
             .padding(12)
           }
