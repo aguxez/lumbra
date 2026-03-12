@@ -106,6 +106,294 @@
       "attack": 5,
       "defense": 5,
       "rarity": "legendary"
+    },
+    {
+      "name": "Prism Rapier",
+      "type": "weapon",
+      "attack": 14,
+      "defense": 2,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Obsidian Maul",
+      "type": "weapon",
+      "attack": 16,
+      "defense": 0,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Scimitar of Sands",
+      "type": "weapon",
+      "attack": 18,
+      "defense": 1,
+      "rarity": "rare"
+    },
+    {
+      "name": "Gear-Tooth Saw",
+      "type": "weapon",
+      "attack": 20,
+      "defense": 0,
+      "rarity": "rare"
+    },
+    {
+      "name": "Frost Axe",
+      "type": "weapon",
+      "attack": 24,
+      "defense": 2,
+      "rarity": "rare"
+    },
+    {
+      "name": "Shadow Blade",
+      "type": "weapon",
+      "attack": 28,
+      "defense": 0,
+      "rarity": "epic"
+    },
+    {
+      "name": "Abyssal Dagger",
+      "type": "weapon",
+      "attack": 32,
+      "defense": 0,
+      "rarity": "epic"
+    },
+    {
+      "name": "Molten Hammer",
+      "type": "weapon",
+      "attack": 36,
+      "defense": 4,
+      "rarity": "epic"
+    },
+    {
+      "name": "Celestial Bow",
+      "type": "weapon",
+      "attack": 42,
+      "defense": 0,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Void Reaver",
+      "type": "weapon",
+      "attack": 48,
+      "defense": 0,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Star-Forged Claymore",
+      "type": "weapon",
+      "attack": 55,
+      "defense": 5,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Infinity Lance",
+      "type": "weapon",
+      "attack": 60,
+      "defense": 0,
+      "rarity": "mythic"
+    },
+    {
+      "name": "Crystal Platemail",
+      "type": "armor",
+      "attack": 0,
+      "defense": 12,
+      "rarity": "rare"
+    },
+    {
+      "name": "Coral Hauberk",
+      "type": "armor",
+      "attack": 0,
+      "defense": 11,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Nomadic Silk",
+      "type": "armor",
+      "attack": 2,
+      "defense": 10,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Fur-Lined Tunic",
+      "type": "armor",
+      "attack": 0,
+      "defense": 14,
+      "rarity": "rare"
+    },
+    {
+      "name": "Umbral Vestment",
+      "type": "armor",
+      "attack": 4,
+      "defense": 16,
+      "rarity": "epic"
+    },
+    {
+      "name": "Forge-Fire Plate",
+      "type": "armor",
+      "attack": 0,
+      "defense": 22,
+      "rarity": "epic"
+    },
+    {
+      "name": "Angelic Robes",
+      "type": "armor",
+      "attack": 5,
+      "defense": 20,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Void Shroud",
+      "type": "armor",
+      "attack": 0,
+      "defense": 28,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Mirror Shield",
+      "type": "shield",
+      "attack": 0,
+      "defense": 12,
+      "rarity": "rare"
+    },
+    {
+      "name": "Shell Buckler",
+      "type": "shield",
+      "attack": 0,
+      "defense": 10,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Bone Aegis",
+      "type": "shield",
+      "attack": 2,
+      "defense": 18,
+      "rarity": "epic"
+    },
+    {
+      "name": "Halo Shield",
+      "type": "shield",
+      "attack": 0,
+      "defense": 25,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Pearl Necklace",
+      "type": "accessory",
+      "attack": 2,
+      "defense": 2,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Brimstone Charm",
+      "type": "accessory",
+      "attack": 4,
+      "defense": 0,
+      "rarity": "rare"
+    },
+    {
+      "name": "Scarab Beetle",
+      "type": "accessory",
+      "attack": 0,
+      "defense": 5,
+      "rarity": "rare"
+    },
+    {
+      "name": "Ice Heart",
+      "type": "accessory",
+      "attack": 3,
+      "defense": 6,
+      "rarity": "epic"
+    },
+    {
+      "name": "Golden Cog",
+      "type": "accessory",
+      "attack": 6,
+      "defense": 3,
+      "rarity": "epic"
+    },
+    {
+      "name": "Cloak of Mists",
+      "type": "accessory",
+      "attack": 0,
+      "defense": 8,
+      "rarity": "epic"
+    },
+    {
+      "name": "Eye of the Void",
+      "type": "accessory",
+      "attack": 10,
+      "defense": 10,
+      "rarity": "legendary"
+    },
+    {
+      "name": "Infinity Core",
+      "type": "accessory",
+      "attack": 15,
+      "defense": 15,
+      "rarity": "mythic"
+    },
+    {
+      "name": "Mega Potion",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "rare",
+      "effect": { "type": "heal", "value": 70 }
+    },
+    {
+      "name": "Bandage",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "common",
+      "effect": { "type": "heal", "value": 15 }
+    },
+    {
+      "name": "Crystal Shards",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "uncommon",
+      "effect": { "type": "heal", "value": 30 }
+    },
+    {
+      "name": "Holy Water",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "rare",
+      "effect": { "type": "heal", "value": 40 }
+    },
+    {
+      "name": "Phoenix Feather",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "epic",
+      "effect": { "type": "heal", "value": 70 }
+    },
+    {
+      "name": "Void Essence",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "legendary",
+      "effect": { "type": "heal", "value": 70 }
+    },
+    {
+      "name": "Ambrosia",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "mythic",
+      "effect": { "type": "heal", "value": 70 }
+    },
+    {
+      "name": "Sunken Kelp",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "uncommon",
+      "effect": { "type": "heal", "value": 25 }
     }
   ],
   "mobs": [
@@ -257,6 +545,186 @@
       "attack": 16,
       "defense": 10,
       "loot": ["Flame Sword", "Dragon Scale Armor", "Health Potion"]
+    },
+    {
+      "name": "Prism Golem",
+      "type": "elemental",
+      "tier": 6,
+      "hp": 55,
+      "attack": 14,
+      "defense": 14,
+      "loot": ["Prism Rapier", "Crystal Shards", "Crystal Platemail"]
+    },
+    {
+      "name": "Shard Hawk",
+      "type": "beast",
+      "tier": 6,
+      "hp": 40,
+      "attack": 18,
+      "defense": 8,
+      "loot": ["Crystal Shards", "Mirror Shield"]
+    },
+    {
+      "name": "Drowned Guard",
+      "type": "undead",
+      "tier": 6,
+      "hp": 60,
+      "attack": 15,
+      "defense": 12,
+      "loot": ["Coral Hauberk", "Sunken Kelp"]
+    },
+    {
+      "name": "Abyssal Kraken",
+      "type": "beast",
+      "tier": 6,
+      "hp": 80,
+      "attack": 17,
+      "defense": 10,
+      "loot": ["Pearl Necklace", "Shell Buckler", "Sunken Kelp"]
+    },
+    {
+      "name": "Giant Scorpion",
+      "type": "beast",
+      "tier": 7,
+      "hp": 65,
+      "attack": 20,
+      "defense": 13,
+      "loot": ["Scimitars of Sands", "Scarab Beetle"]
+    },
+    {
+      "name": "Dune Raider",
+      "type": "humanoid",
+      "tier": 7,
+      "hp": 55,
+      "attack": 19,
+      "defense": 11,
+      "loot": ["Nomadic Silk", "Obsidian Maul"]
+    },
+    {
+      "name": "Steam Automaton",
+      "type": "construct",
+      "tier": 7,
+      "hp": 75,
+      "attack": 18,
+      "defense": 18,
+      "loot": ["Gear-Tooth Saw", "Golden Cog"]
+    },
+    {
+      "name": "Brass Sentry",
+      "type": "construct",
+      "tier": 7,
+      "hp": 50,
+      "attack": 22,
+      "defense": 14,
+      "loot": ["Golden Cog", "Holy Water"]
+    },
+    {
+      "name": "Ice Troll",
+      "type": "giant",
+      "tier": 8,
+      "hp": 90,
+      "attack": 22,
+      "defense": 16,
+      "loot": ["Frost Axe", "Ice Heart"]
+    },
+    {
+      "name": "Snow Leopard",
+      "type": "beast",
+      "tier": 8,
+      "hp": 60,
+      "attack": 26,
+      "defense": 12,
+      "loot": ["Fur-Lined Tunic", "Mega Potion"]
+    },
+    {
+      "name": "Night Hag",
+      "type": "humanoid",
+      "tier": 8,
+      "hp": 70,
+      "attack": 25,
+      "defense": 14,
+      "loot": ["Umbral Vestment", "Shadow Blade"]
+    },
+    {
+      "name": "Shadow Wraith",
+      "type": "shadow",
+      "tier": 8,
+      "hp": 50,
+      "attack": 28,
+      "defense": 18,
+      "loot": ["Cloak of Mists", "Mega Potion"]
+    },
+    {
+      "name": "Pit Fiend",
+      "type": "demon",
+      "tier": 9,
+      "hp": 100,
+      "attack": 30,
+      "defense": 20,
+      "loot": ["Abyssal Dagger", "Bone Aegis", "Phoenix Feather"]
+    },
+    {
+      "name": "Chaos Spawn",
+      "type": "chaotic",
+      "tier": 9,
+      "hp": 85,
+      "attack": 32,
+      "defense": 15,
+      "loot": ["Eye of the Void", "Phoenix Feather"]
+    },
+    {
+      "name": "Magma Slag",
+      "type": "elemental",
+      "tier": 9,
+      "hp": 95,
+      "attack": 28,
+      "defense": 22,
+      "loot": ["Forge-Fire Plate", "Brimstone Charm"]
+    },
+    {
+      "name": "Fire Giant",
+      "type": "giant",
+      "tier": 10,
+      "hp": 120,
+      "attack": 35,
+      "defense": 25,
+      "loot": ["Molten Hammer", "Void Essence"]
+    },
+    {
+      "name": "Seraph Guard",
+      "type": "angelic",
+      "tier": 10,
+      "hp": 110,
+      "attack": 38,
+      "defense": 24,
+      "loot": ["Halo Shield", "Angelic Robes", "Celestial Bow"]
+    },
+    {
+      "name": "Radiant Wisp",
+      "type": "spirit",
+      "tier": 10,
+      "hp": 70,
+      "attack": 45,
+      "defense": 20,
+      "loot": ["Infinity Core", "Ambrosia"]
+    },
+    {
+      "name": "Reality Eater",
+      "type": "eldritch",
+      "tier": 10,
+      "hp": 150,
+      "attack": 40,
+      "defense": 28,
+      "loot": ["Void Reaver", "Void Shroud", "Infinity Core"]
+    },
+    {
+      "name": "Void Stalker",
+      "type": "cosmic",
+      "tier": 10,
+      "hp": 90,
+      "attack": 50,
+      "defense": 22,
+      "loot": ["Infinity Lance", "Star-Forged Claymore", "Ambrosia"]
     }
   ],
   "npcs": [
@@ -353,7 +821,7 @@
       "duration_range": [8, 12],
       "reward_pool": ["Healing Herb", "Health Potion", "Wooden Shield"],
       "xp_range": [20, 40],
-      "flavor": "Ancient ruins half-buried in wildflowers, said to hold trinkets of a lost age."
+      "flavor": "Ancient ruins half-buried in wildflowers."
     },
     {
       "name": "Moonlit Caverns",
@@ -366,7 +834,7 @@
         "Health Potion"
       ],
       "xp_range": [40, 70],
-      "flavor": "Shimmering caves where bioluminescent fungi light the way to hidden treasures."
+      "flavor": "Shimmering caves with bioluminescent fungi."
     },
     {
       "name": "Sunken Library",
@@ -379,7 +847,7 @@
         "Health Potion"
       ],
       "xp_range": [60, 100],
-      "flavor": "A flooded archive of forbidden knowledge, guarded by spectral librarians."
+      "flavor": "A flooded archive of forbidden knowledge."
     },
     {
       "name": "Venomfang Nest",
@@ -392,7 +860,7 @@
         "Health Potion"
       ],
       "xp_range": [80, 130],
-      "flavor": "A fetid warren of poisonous creatures, rich with alchemical reagents."
+      "flavor": "A fetid warren of poisonous creatures."
     },
     {
       "name": "Dragon's Hoard",
@@ -405,7 +873,7 @@
         "Health Potion"
       ],
       "xp_range": [120, 200],
-      "flavor": "The legendary treasure vault beneath the volcanic peak, guarded by dragonfire."
+      "flavor": "Legendary treasure vault guarded by dragonfire."
     }
   ],
   "zones": [
@@ -429,6 +897,56 @@
       "name": "Dragon's Peak",
       "danger": 5,
       "monster_types": ["elemental", "dragon", "humanoid"]
+    },
+    {
+      "name": "Crystal Spires",
+      "danger": 6,
+      "monster_types": ["elemental", "construct"]
+    },
+    {
+      "name": "Sunken Citadel",
+      "danger": 6,
+      "monster_types": ["aquatic", "undead"]
+    },
+    {
+      "name": "Sand-Swept Dunes",
+      "danger": 7,
+      "monster_types": ["beast", "insect"]
+    },
+    {
+      "name": "Clockwork City",
+      "danger": 7,
+      "monster_types": ["construct", "humanoid"]
+    },
+    {
+      "name": "Frostbite Tundra",
+      "danger": 8,
+      "monster_types": ["giant", "beast"]
+    },
+    {
+      "name": "Shadow Realm",
+      "danger": 8,
+      "monster_types": ["shadow", "undead"]
+    },
+    {
+      "name": "Abyssal Rift",
+      "danger": 9,
+      "monster_types": ["demon", "chaotic"]
+    },
+    {
+      "name": "Eternal Forge",
+      "danger": 9,
+      "monster_types": ["elemental", "dwarf"]
+    },
+    {
+      "name": "Celestial Sanctum",
+      "danger": 10,
+      "monster_types": ["angelic", "spirit"]
+    },
+    {
+      "name": "The Void Core",
+      "danger": 10,
+      "monster_types": ["eldritch", "cosmic"]
     }
   ]
 }
