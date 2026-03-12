@@ -1,5 +1,6 @@
 import random
-from game_state import Character, Enemy, Combat
+
+from game_state import Character, Combat
 
 
 def calc_damage(attacker_attack: int, defender_defense: int) -> tuple[int, int]:
@@ -29,25 +30,33 @@ def resolve_round(character: Character, combat: Combat) -> list[str]:
         else:
             log.append(f"You failed to flee from the {enemy.name}!")
             # Take extra damage
-            enemy_dmg, enemy_roll = calc_damage(enemy.attack, character.defense)
+            enemy_dmg, enemy_roll = calc_damage(
+                enemy.attack, character.effective_defense
+            )
             enemy_dmg = int(enemy_dmg * 1.5)
             character.hp = max(0, character.hp - enemy_dmg)
             if enemy_roll == 6:
-                log.append(f"The {enemy.name} critically strikes you for {enemy_dmg} damage!")
+                log.append(
+                    f"The {enemy.name} critically strikes you for {enemy_dmg} damage!"
+                )
             elif enemy_roll == 1:
                 log.append(f"The {enemy.name} misses you!")
             else:
-                log.append(f"The {enemy.name} hits you for {enemy_dmg} damage while you stumble!")
+                log.append(
+                    f"The {enemy.name} hits you for {enemy_dmg} damage while you stumble!"
+                )
             combat.turn += 1
             return log
 
-    player_dmg, player_roll = calc_damage(character.attack, enemy.defense)
+    player_dmg, player_roll = calc_damage(character.effective_attack, enemy.defense)
 
     if strategy == "defend":
         player_dmg = max(1, player_dmg // 2)
 
     if player_roll == 6:
-        log.append(f"Critical hit! You strike the {enemy.name} for {player_dmg} damage!")
+        log.append(
+            f"Critical hit! You strike the {enemy.name} for {player_dmg} damage!"
+        )
     elif player_roll == 1:
         log.append(f"You miss the {enemy.name}!")
         player_dmg = 0
@@ -61,7 +70,7 @@ def resolve_round(character: Character, combat: Combat) -> list[str]:
         return log
 
     # Enemy attacks
-    enemy_dmg, enemy_roll = calc_damage(enemy.attack, character.defense)
+    enemy_dmg, enemy_roll = calc_damage(enemy.attack, character.effective_defense)
 
     if strategy == "defend":
         enemy_dmg = max(1, enemy_dmg // 2)
@@ -76,10 +85,33 @@ def resolve_round(character: Character, combat: Combat) -> list[str]:
 
     character.hp = max(0, character.hp - enemy_dmg)
 
+    # Auto-use potion if HP is low
+    if character.is_alive():
+        potion_log = try_auto_potion(character)
+        log.extend(potion_log)
+
     if not character.is_alive():
         log.append("You have been slain!")
 
     combat.turn += 1
+    return log
+
+
+def try_auto_potion(character: Character, threshold: float = 0.3) -> list[str]:
+    log = []
+    if character.max_hp <= 0:
+        return log
+    hp_pct = character.hp / character.max_hp
+    if hp_pct < threshold:
+        for item in character.inventory:
+            if item.item_type == "consumable" and item.effect_type == "heal":
+                heal_amount = min(item.effect_value, character.max_hp - character.hp)
+                character.hp += heal_amount
+                character.inventory.remove(item)
+                log.append(
+                    f"Auto-used {item.name}! Restored {heal_amount} HP. ({character.hp}/{character.max_hp})"
+                )
+                break
     return log
 
 

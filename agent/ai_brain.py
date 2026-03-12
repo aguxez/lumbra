@@ -1,6 +1,25 @@
+from __future__ import annotations
+
 import re
 import random
-from world import MONSTER_TABLE, LOOT_TABLE, ZONES, generate_hardcoded_quest, EXPLORATION_EVENTS
+from world import ZONES, generate_hardcoded_quest, EXPLORATION_EVENTS
+from config_loader import get_mobs_for_zone, get_loot_for_mob
+
+
+def _truncate_sentence(text: str, max_len: int = 120) -> str | None:
+    """Truncate text at the last sentence boundary within max_len.
+    Returns None if no complete sentence is found."""
+    if len(text) <= max_len:
+        # Check it looks like a complete sentence
+        if text.rstrip()[-1:] in ".!?\"'":
+            return text.rstrip()
+        return None
+    # Find last sentence-ending punctuation within limit
+    chunk = text[:max_len]
+    for i in range(len(chunk) - 1, -1, -1):
+        if chunk[i] in ".!?":
+            return chunk[: i + 1]
+    return None
 
 
 def decide_combat_strategy(tokenizer, model, character_dict: dict, enemy_dict: dict) -> str:
@@ -47,16 +66,18 @@ def decide_combat_strategy(tokenizer, model, character_dict: dict, enemy_dict: d
 
 
 def generate_quest(tokenizer, model, zone_name: str) -> dict:
-    monsters = MONSTER_TABLE.get(zone_name, MONSTER_TABLE["Peaceful Meadow"])
+    monsters = get_mobs_for_zone(zone_name)
+    if not monsters:
+        monsters = get_mobs_for_zone("Peaceful Meadow")
     monster_names = ", ".join(m["name"] for m in monsters)
 
     prompt = (
         f"You are a quest giver in the {zone_name}.\n"
         f"Monsters here: {monster_names}.\n"
-        f"Give a quest. Format:\n"
-        f"TARGET: <monster name>\n"
+        f"Give a quest. Use EXACTLY this format (one short complete sentence for description, end with a period):\n"
+        f"TARGET: <monster name from the list above>\n"
         f"COUNT: <number 3-6>\n"
-        f"DESCRIPTION: <one sentence quest description>"
+        f"DESCRIPTION: <one complete sentence, under 80 characters, ending with a period>"
     )
 
     try:
@@ -67,7 +88,7 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
         )
         inputs = tokenizer(text, return_tensors="pt")
         outputs = model.generate(
-            **inputs, max_new_tokens=80, do_sample=True, temperature=0.8,
+            **inputs, max_new_tokens=120, do_sample=True, temperature=0.8,
         )
         generated = outputs[0][inputs["input_ids"].shape[1]:]
         result = tokenizer.decode(generated, skip_special_tokens=True).strip()
@@ -81,7 +102,11 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
         if target_match and count_match and desc_match:
             target = target_match.group(1).strip()
             count = int(count_match.group(1).strip())
-            desc = desc_match.group(1).strip()[:100]
+            raw_desc = desc_match.group(1).strip()
+            desc = _truncate_sentence(raw_desc)
+            if not desc:
+                # Incomplete sentence — fall back to hardcoded quest
+                return generate_hardcoded_quest(zone_name)
 
             # Validate target exists in zone
             valid_names = [m["name"] for m in monsters]
@@ -91,8 +116,8 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
             count = max(3, min(6, count))
 
             zone_idx = next((i for i, z in enumerate(ZONES) if z["name"] == zone_name), 0)
-            loot = LOOT_TABLE.get(zone_name, LOOT_TABLE["Peaceful Meadow"])
-            reward_item = random.choice(loot)["name"] if random.random() < 0.5 else None
+            loot_items = get_loot_for_mob(target)
+            reward_item = random.choice(loot_items)["name"] if loot_items and random.random() < 0.5 else None
 
             return {
                 "description": desc,
@@ -110,7 +135,7 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
 def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
     prompt = (
         f"You are exploring the {zone_name}. "
-        f"Describe one brief thing you see or experience (one sentence, under 100 characters)."
+        f"Describe one brief thing you see or experience (one complete sentence, under 80 characters, ending with a period)."
     )
 
     try:
@@ -121,7 +146,7 @@ def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
         )
         inputs = tokenizer(text, return_tensors="pt")
         outputs = model.generate(
-            **inputs, max_new_tokens=60, do_sample=True, temperature=0.9,
+            **inputs, max_new_tokens=80, do_sample=True, temperature=0.9,
         )
         generated = outputs[0][inputs["input_ids"].shape[1]:]
         result = tokenizer.decode(generated, skip_special_tokens=True).strip()
@@ -129,7 +154,9 @@ def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
         result = re.sub(r"<think>.*", "", result, flags=re.DOTALL).strip()
 
         if result and len(result) > 5:
-            return result[:100]
+            truncated = _truncate_sentence(result)
+            if truncated:
+                return truncated
     except Exception as e:
         print(f"[ai_brain] exploration event error: {e}")
 
