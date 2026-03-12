@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import re
 import random
-from world import ZONES, generate_hardcoded_quest, EXPLORATION_EVENTS
-from config_loader import get_mobs_for_zone, get_loot_for_mob
+import re
+
+from config_loader import get_loot_for_mob, get_mobs_for_zone
+from world import EXPLORATION_EVENTS, ZONES, generate_hardcoded_quest
 
 
 def _truncate_sentence(text: str, max_len: int = 120) -> str | None:
@@ -22,19 +23,26 @@ def _truncate_sentence(text: str, max_len: int = 120) -> str | None:
     return None
 
 
-def _generate(tokenizer, model, prompt: str, max_tokens: int = 80, temperature: float = 0.9) -> str | None:
+def _generate(
+    tokenizer, model, prompt: str, max_tokens: int = 80, temperature: float = 0.9
+) -> str | None:
     """Shared LLM generate-decode-clean pipeline."""
     try:
         messages = [{"role": "user", "content": prompt}]
         text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
             enable_thinking=False,
         )
         inputs = tokenizer(text, return_tensors="pt")
         outputs = model.generate(
-            **inputs, max_new_tokens=max_tokens, do_sample=True, temperature=temperature,
+            **inputs,
+            max_new_tokens=max_tokens,
+            do_sample=True,
+            temperature=temperature,
         )
-        generated = outputs[0][inputs["input_ids"].shape[1]:]
+        generated = outputs[0][inputs["input_ids"].shape[1] :]
         result = tokenizer.decode(generated, skip_special_tokens=True).strip()
         result = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
         result = re.sub(r"<think>.*", "", result, flags=re.DOTALL).strip()
@@ -44,7 +52,9 @@ def _generate(tokenizer, model, prompt: str, max_tokens: int = 80, temperature: 
         return None
 
 
-def decide_combat_strategy(tokenizer, model, character_dict: dict, enemy_dict: dict) -> str:
+def decide_combat_strategy(
+    tokenizer, model, character_dict: dict, enemy_dict: dict
+) -> str:
     hp_pct = character_dict["hp"] / max(1, character_dict["max_hp"])
     prompt = (
         f"You are a RPG adventurer with {character_dict['hp']}/{character_dict['max_hp']} HP, "
@@ -109,9 +119,15 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
 
             count = max(3, min(6, count))
 
-            zone_idx = next((i for i, z in enumerate(ZONES) if z["name"] == zone_name), 0)
+            zone_idx = next(
+                (i for i, z in enumerate(ZONES) if z["name"] == zone_name), 0
+            )
             loot_items = get_loot_for_mob(target)
-            reward_item = random.choice(loot_items)["name"] if loot_items and random.random() < 0.5 else None
+            reward_item = (
+                random.choice(loot_items)["name"]
+                if loot_items and random.random() < 0.5
+                else None
+            )
 
             return {
                 "description": desc,
@@ -137,7 +153,9 @@ def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
     return random.choice(EXPLORATION_EVENTS)
 
 
-def generate_npc_dialogue(tokenizer, model, npc_name: str, npc_role: str, zone: str, affinity: int) -> str | None:
+def generate_npc_dialogue(
+    tokenizer, model, npc_name: str, npc_role: str, zone: str, affinity: int
+) -> str | None:
     prompt = (
         f"You are {npc_name}, a {npc_role} in the {zone}. "
         f"The adventurer visits you (friendship level: {affinity}). "
@@ -151,7 +169,9 @@ def generate_npc_dialogue(tokenizer, model, npc_name: str, npc_role: str, zone: 
     return None
 
 
-def generate_expedition_event(tokenizer, model, destination: str, progress: int, duration: int) -> str | None:
+def generate_expedition_event(
+    tokenizer, model, destination: str, progress: int, duration: int
+) -> str | None:
     pct = int(progress / max(1, duration) * 100)
     prompt = (
         f"An expedition is exploring {destination} ({pct}% complete). "

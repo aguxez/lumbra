@@ -2,7 +2,6 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
 
 SAVE_PATH = os.path.join(os.path.dirname(__file__), "savegame.json")
 
@@ -51,9 +50,9 @@ class NPCEncounter:
     npc_role: str
     dialogue: str
     interaction_type: str
-    offer_item: Optional[str] = None
-    request_item: Optional[str] = None
-    buff_type: Optional[str] = None
+    offer_item: str | None = None
+    request_item: str | None = None
+    buff_type: str | None = None
     buff_value: int = 0
     buff_ticks: int = 0
 
@@ -78,7 +77,7 @@ class InventoryItem:
     item_type: str = "accessory"
     attack: int = 0
     defense: int = 0
-    effect_type: Optional[str] = None
+    effect_type: str | None = None
     effect_value: int = 0
 
     @classmethod
@@ -89,8 +88,12 @@ class InventoryItem:
             item_type=data.get("type", "accessory"),
             attack=data.get("attack", 0),
             defense=data.get("defense", 0),
-            effect_type=data.get("effect", {}).get("type") if data.get("effect") else None,
-            effect_value=data.get("effect", {}).get("value", 0) if data.get("effect") else 0,
+            effect_type=data.get("effect", {}).get("type")
+            if data.get("effect")
+            else None,
+            effect_value=data.get("effect", {}).get("value", 0)
+            if data.get("effect")
+            else 0,
         )
 
 
@@ -103,8 +106,8 @@ class Character:
     defense: int = 5
     xp: int = 0
     inventory: list[InventoryItem] = field(default_factory=list)
-    weapon: Optional[str] = None
-    armor: Optional[str] = None
+    weapon: str | None = None
+    armor: str | None = None
     active_buffs: list[ActiveBuff] = field(default_factory=list)
 
     def is_alive(self) -> bool:
@@ -194,7 +197,7 @@ class Quest:
     goal: int
     progress: int = 0
     reward_xp: int = 50
-    reward_item: Optional[str] = None
+    reward_item: str | None = None
 
     @property
     def is_complete(self) -> bool:
@@ -230,9 +233,9 @@ class GameState:
     tick: int = 0
     character: Character = field(default_factory=Character)
     zone: str = "Peaceful Meadow"
-    quest: Optional[Quest] = None
-    combat: Optional[Combat] = None
-    npc_encounter: Optional[NPCEncounter] = None
+    quest: Quest | None = None
+    combat: Combat | None = None
+    npc_encounter: NPCEncounter | None = None
     npc_relationships: dict = field(default_factory=dict)
     expeditions: list[Expedition] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
@@ -245,8 +248,12 @@ class GameState:
             "zone": self.zone,
             "quest": self.quest.to_dict() if self.quest else None,
             "combat": self.combat.to_dict() if self.combat else None,
-            "npc_encounter": self.npc_encounter.to_dict() if self.npc_encounter else None,
-            "expeditions": [e.to_dict() for e in self.expeditions if e.status == "active"],
+            "npc_encounter": self.npc_encounter.to_dict()
+            if self.npc_encounter
+            else None,
+            "expeditions": [
+                e.to_dict() for e in self.expeditions if e.status == "active"
+            ],
             "log": self.log[-10:],
         }
 
@@ -315,7 +322,10 @@ class GameState:
             for b in raw_buffs
         ]
         character = Character(
-            **char_data, inventory=inventory, weapon=weapon, armor=armor,
+            **char_data,
+            inventory=inventory,
+            weapon=weapon,
+            armor=armor,
             active_buffs=active_buffs,
         )
 

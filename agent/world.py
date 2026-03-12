@@ -3,13 +3,13 @@ from __future__ import annotations
 import random
 
 from config_loader import (
+    EXPEDITION_DESTINATIONS,
     ZONES,
+    get_expedition_destination,
     get_item,
     get_loot_for_mob,
     get_mobs_for_zone,
     get_npcs_for_zone,
-    get_expedition_destination,
-    EXPEDITION_DESTINATIONS,
 )
 from game_state import ActiveBuff, Enemy, Expedition, InventoryItem, NPCEncounter
 
@@ -185,7 +185,11 @@ def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
         # Check if player has the requested item (or request is None = free gift)
         if encounter.request_item:
             owned = next(
-                (i for i in state.character.inventory if i.name == encounter.request_item),
+                (
+                    i
+                    for i in state.character.inventory
+                    if i.name == encounter.request_item
+                ),
                 None,
             )
             if not owned:
@@ -269,14 +273,19 @@ def resolve_expedition(expedition: Expedition) -> list[str]:
     roll = random.random()
 
     # Find destination data for reward pool
-    dest = next((d for d in EXPEDITION_DESTINATIONS if d["name"] == expedition.destination), None)
+    dest = next(
+        (d for d in EXPEDITION_DESTINATIONS if d["name"] == expedition.destination),
+        None,
+    )
     reward_pool = dest["reward_pool"] if dest else []
 
     if roll < success_chance:
         # Full success
         num_items = random.randint(1, 2)
         if reward_pool:
-            expedition.rewards = random.sample(reward_pool, min(num_items, len(reward_pool)))
+            expedition.rewards = random.sample(
+                reward_pool, min(num_items, len(reward_pool))
+            )
         expedition.status = "completed"
         logs.append(
             f"Expedition to {expedition.destination} succeeded! Found: {', '.join(expedition.rewards) if expedition.rewards else 'nothing'}. +{expedition.reward_xp} XP"
