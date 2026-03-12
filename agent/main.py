@@ -57,10 +57,10 @@ def try_load_ai():
 
         import ai_brain as _ai_brain
 
-        MODEL_ID = "Qwen/Qwen3-0.6B"
-        print(f"Loading {MODEL_ID}...")
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-        model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+        model_id = "Qwen/Qwen3-0.6B"
+        print(f"Loading {model_id}...")
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id)
         ai_brain = _ai_brain
         print("AI brain loaded.")
     except Exception as e:
@@ -123,6 +123,7 @@ def handle_death(state: GameState):
 
 def tick_combat(state: GameState):
     combat = state.combat
+    assert combat is not None
     strategy = get_combat_strategy(state.character.to_dict(), combat.to_dict())
     combat.ai_strategy = strategy
 
@@ -197,6 +198,7 @@ def tick_quest(state: GameState):
 
 def tick_quest_complete(state: GameState):
     quest = state.quest
+    assert quest is not None
     state.character.xp += quest.reward_xp
     state.add_log(f"Quest complete! Gained {quest.reward_xp} XP.")
 
@@ -222,7 +224,9 @@ def tick_quest_complete(state: GameState):
         if exp and sum(1 for e in state.expeditions if e.status == "active") < 3:
             state.expeditions.append(exp)
             state.add_log(
-                f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)"
+                f"Scouts depart for {exp.destination}! "
+                f"(risk {exp.risk_level}, "
+                f"~{exp.duration} ticks)"
             )
 
     # Maybe move zones
@@ -301,7 +305,9 @@ def maybe_launch_expedition(state: GameState):
     if exp:
         state.expeditions.append(exp)
         state.add_log(
-            f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)"
+            f"Scouts depart for {exp.destination}! "
+            f"(risk {exp.risk_level}, "
+            f"~{exp.duration} ticks)"
         )
 
 
@@ -323,8 +329,9 @@ def main():
     try_load_ai()
 
     state = GameState.load()
+    char = state.character
     print(
-        f"Game loaded: tick={state.tick}, zone={state.zone}, hp={state.character.hp}/{state.character.max_hp}"
+        f"Game loaded: tick={state.tick}, zone={state.zone}, hp={char.hp}/{char.max_hp}"
     )
 
     while True:
@@ -354,8 +361,13 @@ def main():
             state.npc_encounter = None
 
         # Print tick summary
+        char = state.character
         print(
-            f"\n[tick {state.tick}] zone={state.zone} hp={state.character.hp}/{state.character.max_hp} atk={state.character.effective_attack} def={state.character.effective_defense} xp={state.character.xp}"
+            f"\n[tick {state.tick}] zone={state.zone} "
+            f"hp={char.hp}/{char.max_hp} "
+            f"atk={char.effective_attack} "
+            f"def={char.effective_defense} "
+            f"xp={char.xp}"
         )
         for msg in state.log:
             print(f"  {msg}")
