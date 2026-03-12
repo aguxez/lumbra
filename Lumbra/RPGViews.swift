@@ -193,6 +193,8 @@ struct EventLogView: View {
 
 struct InventorySection: View {
     let items: [InventoryItem]
+    var weapon: String? = nil
+    var armor: String? = nil
     @State private var isExpanded = false
 
     var body: some View {
@@ -204,10 +206,34 @@ struct InventorySection: View {
             } else {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(items) { item in
-                        HStack {
+                        HStack(spacing: 4) {
+                            if item.name == weapon || item.name == armor {
+                                Text("E")
+                                    .font(.system(size: 8).bold())
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 3)
+                                    .padding(.vertical, 1)
+                                    .background(Color.blue)
+                                    .cornerRadius(3)
+                            }
                             Text(item.name)
                                 .font(.caption)
                             Spacer()
+                            if let atk = item.attack, atk > 0 {
+                                Text("+\(atk) ATK")
+                                    .font(.caption2)
+                                    .foregroundColor(.orange)
+                            }
+                            if let def = item.defense, def > 0 {
+                                Text("+\(def) DEF")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                            }
+                            if item.effect_type == "heal", let val = item.effect_value, val > 0 {
+                                Text("+\(val) HP")
+                                    .font(.caption2)
+                                    .foregroundColor(.green)
+                            }
                             Text(item.rarity)
                                 .font(.caption2)
                                 .foregroundColor(rarityColor(item.rarity))

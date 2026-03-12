@@ -1,1 +1,3 @@
 .omc
+agent/__pycache__
+savegame.json

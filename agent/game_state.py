@@ -1,6 +1,6 @@
 import json
 import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -11,6 +11,11 @@ SAVE_PATH = os.path.join(os.path.dirname(__file__), "savegame.json")
 class InventoryItem:
     name: str
     rarity: str = "common"
+    item_type: str = "accessory"
+    attack: int = 0
+    defense: int = 0
+    effect_type: Optional[str] = None
+    effect_value: int = 0
 
 
 @dataclass
@@ -22,9 +27,29 @@ class Character:
     defense: int = 5
     xp: int = 0
     inventory: list[InventoryItem] = field(default_factory=list)
+    weapon: Optional[str] = None
+    armor: Optional[str] = None
 
     def is_alive(self) -> bool:
         return self.hp > 0
+
+    @property
+    def effective_attack(self) -> int:
+        bonus = 0
+        if self.weapon:
+            item = next((i for i in self.inventory if i.name == self.weapon), None)
+            if item:
+                bonus = item.attack
+        return self.attack + bonus
+
+    @property
+    def effective_defense(self) -> int:
+        bonus = 0
+        if self.armor:
+            item = next((i for i in self.inventory if i.name == self.armor), None)
+            if item:
+                bonus = item.defense
+        return self.defense + bonus
 
     def to_dict(self) -> dict:
         return {
@@ -34,7 +59,22 @@ class Character:
             "attack": self.attack,
             "defense": self.defense,
             "xp": self.xp,
-            "inventory": [{"name": i.name, "rarity": i.rarity} for i in self.inventory],
+            "inventory": [
+                {
+                    "name": i.name,
+                    "rarity": i.rarity,
+                    "item_type": i.item_type,
+                    "attack": i.attack,
+                    "defense": i.defense,
+                    "effect_type": i.effect_type,
+                    "effect_value": i.effect_value,
+                }
+                for i in self.inventory
+            ],
+            "weapon": self.weapon,
+            "armor": self.armor,
+            "effective_attack": self.effective_attack,
+            "effective_defense": self.effective_defense,
         }
 
 
@@ -132,7 +172,9 @@ class GameState:
                 "enemy": asdict(self.combat.enemy),
                 "turn": self.combat.turn,
                 "ai_strategy": self.combat.ai_strategy,
-            } if self.combat else None,
+            }
+            if self.combat
+            else None,
             "log": self.log[-20:],
         }
         tmp = path + ".tmp"
@@ -149,8 +191,27 @@ class GameState:
             return cls()
 
         char_data = data.get("character", {})
-        inventory = [InventoryItem(**i) for i in char_data.pop("inventory", [])]
-        character = Character(**char_data, inventory=inventory)
+        raw_inventory = char_data.pop("inventory", [])
+        inventory = [
+            InventoryItem(
+                name=i["name"],
+                rarity=i.get("rarity", "common"),
+                item_type=i.get("item_type", "accessory"),
+                attack=i.get("attack", 0),
+                defense=i.get("defense", 0),
+                effect_type=i.get("effect_type"),
+                effect_value=i.get("effect_value", 0),
+            )
+            for i in raw_inventory
+        ]
+        # Remove computed properties before constructing
+        char_data.pop("effective_attack", None)
+        char_data.pop("effective_defense", None)
+        weapon = char_data.pop("weapon", None)
+        armor = char_data.pop("armor", None)
+        character = Character(
+            **char_data, inventory=inventory, weapon=weapon, armor=armor
+        )
 
         quest = None
         if data.get("quest"):

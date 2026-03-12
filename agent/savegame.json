@@ -1,35 +1,55 @@
 {
-  "tick": 24,
+  "tick": 58,
   "zone": "Peaceful Meadow",
   "character": {
     "name": "Wanderer",
-    "hp": 34,
-    "max_hp": 50,
-    "attack": 11,
+    "hp": 52,
+    "max_hp": 52,
+    "attack": 14,
     "defense": 9,
-    "xp": 0,
-    "inventory": []
+    "xp": 103,
+    "inventory": [
+      {
+        "name": "Health Potion",
+        "rarity": "common",
+        "item_type": "consumable",
+        "attack": 0,
+        "defense": 0,
+        "effect_type": "heal",
+        "effect_value": 20
+      },
+      {
+        "name": "Healing Herb",
+        "rarity": "common",
+        "item_type": "consumable",
+        "attack": 0,
+        "defense": 0,
+        "effect_type": "heal",
+        "effect_value": 10
+      },
+      {
+        "name": "Health Potion",
+        "rarity": "common",
+        "item_type": "consumable",
+        "attack": 0,
+        "defense": 0,
+        "effect_type": "heal",
+        "effect_value": 20
+      }
+    ],
+    "weapon": null,
+    "armor": null
   },
   "quest": {
-    "description": "Gather supplies and find a safe place to rest before exploring the peaceful meadow.",
+    "description": "Find the slime that will protect you from the wild chickens.",
     "target": "Field Rat",
     "goal": 3,
-    "progress": 1,
+    "progress": 0,
     "reward_xp": 45,
-    "reward_item": "Wooden Shield"
+    "reward_item": "Healing Herb"
   },
-  "combat": {
-    "enemy": {
-      "name": "Wild Chicken",
-      "hp": 6,
-      "max_hp": 6,
-      "attack": 2,
-      "defense": 0
-    },
-    "turn": 1,
-    "ai_strategy": "attack"
-  },
+  "combat": null,
   "log": [
-    "A wild Wild Chicken appears!"
+    "The sun dips low in the Peaceful Meadow, casting golden light on the grass."
   ]
 }

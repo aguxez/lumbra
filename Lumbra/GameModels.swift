@@ -18,12 +18,21 @@ struct CharacterState: Codable {
     let defense: Int
     let xp: Int
     let inventory: [InventoryItem]
+    let weapon: String?
+    let armor: String?
+    let effective_attack: Int?
+    let effective_defense: Int?
 }
 
 struct InventoryItem: Codable, Identifiable {
     var id: String { name }
     let name: String
     let rarity: String
+    let item_type: String?
+    let attack: Int?
+    let defense: Int?
+    let effect_type: String?
+    let effect_value: Int?
 }
 
 struct QuestState: Codable {

@@ -38,8 +38,16 @@ struct LumbraPanel: View {
                     }
 
                     HStack(spacing: 16) {
-                        StatRowView(icon: "bolt.fill", label: "ATK", value: "\(gs.character.attack)")
-                        StatRowView(icon: "shield.fill", label: "DEF", value: "\(gs.character.defense)")
+                        if let effAtk = gs.character.effective_attack, effAtk != gs.character.attack {
+                            StatRowView(icon: "bolt.fill", label: "ATK", value: "\(effAtk) (\(gs.character.attack))")
+                        } else {
+                            StatRowView(icon: "bolt.fill", label: "ATK", value: "\(gs.character.attack)")
+                        }
+                        if let effDef = gs.character.effective_defense, effDef != gs.character.defense {
+                            StatRowView(icon: "shield.fill", label: "DEF", value: "\(effDef) (\(gs.character.defense))")
+                        } else {
+                            StatRowView(icon: "shield.fill", label: "DEF", value: "\(gs.character.defense)")
+                        }
                         StatRowView(icon: "star.fill", label: "XP", value: "\(gs.character.xp)")
                     }
                 }
@@ -66,7 +74,7 @@ struct LumbraPanel: View {
                 }
 
                 // Inventory
-                InventorySection(items: gs.character.inventory)
+                InventorySection(items: gs.character.inventory, weapon: gs.character.weapon, armor: gs.character.armor)
 
             } else {
                 VStack(spacing: 8) {

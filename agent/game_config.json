@@ -1,0 +1,285 @@
+{
+  "items": [
+    {
+      "name": "Wooden Shield",
+      "type": "shield",
+      "attack": 0,
+      "defense": 2,
+      "rarity": "common"
+    },
+    {
+      "name": "Healing Herb",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "common",
+      "effect": { "type": "heal", "value": 10 }
+    },
+    {
+      "name": "Health Potion",
+      "type": "consumable",
+      "attack": 0,
+      "defense": 0,
+      "rarity": "common",
+      "effect": { "type": "heal", "value": 20 }
+    },
+    {
+      "name": "Iron Sword",
+      "type": "weapon",
+      "attack": 3,
+      "defense": 0,
+      "rarity": "common"
+    },
+    {
+      "name": "Leather Armor",
+      "type": "armor",
+      "attack": 0,
+      "defense": 3,
+      "rarity": "common"
+    },
+    {
+      "name": "Forest Amulet",
+      "type": "accessory",
+      "attack": 1,
+      "defense": 1,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Steel Blade",
+      "type": "weapon",
+      "attack": 5,
+      "defense": 0,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Iron Shield",
+      "type": "shield",
+      "attack": 0,
+      "defense": 4,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Shadow Cloak",
+      "type": "armor",
+      "attack": 0,
+      "defense": 5,
+      "rarity": "rare"
+    },
+    {
+      "name": "Venom Dagger",
+      "type": "weapon",
+      "attack": 7,
+      "defense": 0,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Swamp Boots",
+      "type": "armor",
+      "attack": 0,
+      "defense": 4,
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Witch's Staff",
+      "type": "weapon",
+      "attack": 9,
+      "defense": 1,
+      "rarity": "rare"
+    },
+    {
+      "name": "Dragon Scale Armor",
+      "type": "armor",
+      "attack": 0,
+      "defense": 10,
+      "rarity": "rare"
+    },
+    {
+      "name": "Flame Sword",
+      "type": "weapon",
+      "attack": 12,
+      "defense": 0,
+      "rarity": "rare"
+    },
+    {
+      "name": "Dragon's Heart",
+      "type": "accessory",
+      "attack": 5,
+      "defense": 5,
+      "rarity": "legendary"
+    }
+  ],
+  "mobs": [
+    {
+      "name": "Slime",
+      "type": "beast",
+      "tier": 1,
+      "hp": 10,
+      "attack": 3,
+      "defense": 1,
+      "loot": ["Healing Herb", "Health Potion"]
+    },
+    {
+      "name": "Field Rat",
+      "type": "beast",
+      "tier": 1,
+      "hp": 8,
+      "attack": 4,
+      "defense": 1,
+      "loot": ["Healing Herb", "Health Potion"]
+    },
+    {
+      "name": "Wild Chicken",
+      "type": "beast",
+      "tier": 1,
+      "hp": 6,
+      "attack": 2,
+      "defense": 0,
+      "loot": ["Healing Herb", "Health Potion"]
+    },
+    {
+      "name": "Goblin",
+      "type": "humanoid",
+      "tier": 2,
+      "hp": 15,
+      "attack": 6,
+      "defense": 2,
+      "loot": ["Iron Sword", "Leather Armor", "Health Potion"]
+    },
+    {
+      "name": "Wolf",
+      "type": "beast",
+      "tier": 2,
+      "hp": 18,
+      "attack": 7,
+      "defense": 3,
+      "loot": ["Leather Armor", "Forest Amulet", "Health Potion"]
+    },
+    {
+      "name": "Forest Spider",
+      "type": "beast",
+      "tier": 2,
+      "hp": 12,
+      "attack": 8,
+      "defense": 1,
+      "loot": ["Forest Amulet", "Health Potion"]
+    },
+    {
+      "name": "Skeleton",
+      "type": "undead",
+      "tier": 3,
+      "hp": 22,
+      "attack": 9,
+      "defense": 4,
+      "loot": ["Steel Blade", "Iron Shield", "Health Potion"]
+    },
+    {
+      "name": "Dark Elf",
+      "type": "humanoid",
+      "tier": 3,
+      "hp": 25,
+      "attack": 10,
+      "defense": 5,
+      "loot": ["Shadow Cloak", "Steel Blade", "Health Potion"]
+    },
+    {
+      "name": "Troll",
+      "type": "humanoid",
+      "tier": 3,
+      "hp": 35,
+      "attack": 8,
+      "defense": 7,
+      "loot": ["Iron Shield", "Steel Blade", "Health Potion"]
+    },
+    {
+      "name": "Swamp Witch",
+      "type": "humanoid",
+      "tier": 4,
+      "hp": 28,
+      "attack": 12,
+      "defense": 4,
+      "loot": ["Witch's Staff", "Venom Dagger", "Health Potion"]
+    },
+    {
+      "name": "Bog Beast",
+      "type": "beast",
+      "tier": 4,
+      "hp": 40,
+      "attack": 10,
+      "defense": 8,
+      "loot": ["Swamp Boots", "Health Potion"]
+    },
+    {
+      "name": "Poison Drake",
+      "type": "beast",
+      "tier": 4,
+      "hp": 32,
+      "attack": 14,
+      "defense": 5,
+      "loot": ["Venom Dagger", "Swamp Boots", "Health Potion"]
+    },
+    {
+      "name": "Fire Elemental",
+      "type": "elemental",
+      "tier": 5,
+      "hp": 35,
+      "attack": 15,
+      "defense": 6,
+      "loot": ["Flame Sword", "Health Potion"]
+    },
+    {
+      "name": "Wyvern",
+      "type": "dragon",
+      "tier": 5,
+      "hp": 45,
+      "attack": 13,
+      "defense": 9,
+      "loot": ["Dragon Scale Armor", "Health Potion"]
+    },
+    {
+      "name": "Ancient Dragon",
+      "type": "dragon",
+      "tier": 5,
+      "hp": 60,
+      "attack": 18,
+      "defense": 12,
+      "loot": [
+        "Dragon's Heart",
+        "Flame Sword",
+        "Dragon Scale Armor",
+        "Health Potion"
+      ]
+    },
+    {
+      "name": "Dragon Knight",
+      "type": "humanoid",
+      "tier": 5,
+      "hp": 50,
+      "attack": 16,
+      "defense": 10,
+      "loot": ["Flame Sword", "Dragon Scale Armor", "Health Potion"]
+    }
+  ],
+  "zones": [
+    { "name": "Peaceful Meadow", "danger": 1, "monster_types": ["beast"] },
+    {
+      "name": "Whispering Woods",
+      "danger": 2,
+      "monster_types": ["humanoid", "beast"]
+    },
+    {
+      "name": "Dark Forest",
+      "danger": 3,
+      "monster_types": ["undead", "humanoid"]
+    },
+    {
+      "name": "Cursed Swamp",
+      "danger": 4,
+      "monster_types": ["humanoid", "beast"]
+    },
+    {
+      "name": "Dragon's Peak",
+      "danger": 5,
+      "monster_types": ["elemental", "dragon", "humanoid"]
+    }
+  ]
+}
