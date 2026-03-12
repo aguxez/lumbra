@@ -1,0 +1,35 @@
+{
+  "tick": 24,
+  "zone": "Peaceful Meadow",
+  "character": {
+    "name": "Wanderer",
+    "hp": 34,
+    "max_hp": 50,
+    "attack": 11,
+    "defense": 9,
+    "xp": 0,
+    "inventory": []
+  },
+  "quest": {
+    "description": "Gather supplies and find a safe place to rest before exploring the peaceful meadow.",
+    "target": "Field Rat",
+    "goal": 3,
+    "progress": 1,
+    "reward_xp": 45,
+    "reward_item": "Wooden Shield"
+  },
+  "combat": {
+    "enemy": {
+      "name": "Wild Chicken",
+      "hp": 6,
+      "max_hp": 6,
+      "attack": 2,
+      "defense": 0
+    },
+    "turn": 1,
+    "ai_strategy": "attack"
+  },
+  "log": [
+    "A wild Wild Chicken appears!"
+  ]
+}

@@ -1,0 +1,241 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AAA00001 /* LumbraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00001; };
+		AAA00002 /* LumbraViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00002; };
+		AAA00003 /* LumbraPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00003; };
+		AAA00004 /* LocalServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00006; };
+		AAA00005 /* GameModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00007; };
+		AAA00006 /* RPGViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00008; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		BBB00001 /* LumbraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumbraApp.swift; sourceTree = "<group>"; };
+		BBB00002 /* LumbraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumbraViewModel.swift; sourceTree = "<group>"; };
+		BBB00003 /* LumbraPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumbraPanel.swift; sourceTree = "<group>"; };
+		BBB00004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BBB00005 /* Lumbra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lumbra.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BBB00006 /* LocalServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServer.swift; sourceTree = "<group>"; };
+		BBB00007 /* GameModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModels.swift; sourceTree = "<group>"; };
+		BBB00008 /* RPGViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPGViews.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		CCC00001 = {
+			isa = PBXGroup;
+			children = (
+				CCC00002 /* Lumbra */,
+				CCC00003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CCC00002 /* Lumbra */ = {
+			isa = PBXGroup;
+			children = (
+				BBB00001 /* LumbraApp.swift */,
+				BBB00002 /* LumbraViewModel.swift */,
+				BBB00003 /* LumbraPanel.swift */,
+				BBB00006 /* LocalServer.swift */,
+				BBB00007 /* GameModels.swift */,
+				BBB00008 /* RPGViews.swift */,
+				BBB00004 /* Info.plist */,
+			);
+			path = Lumbra;
+			sourceTree = "<group>";
+		};
+		CCC00003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BBB00005 /* Lumbra.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DDD00001 /* Lumbra */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EEE00003;
+			buildPhases = (
+				DDD00002 /* Sources */,
+				DDD00003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Lumbra;
+			productName = Lumbra;
+			productReference = BBB00005;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FFF00001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = EEE00001;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CCC00001;
+			productRefGroup = CCC00003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DDD00001 /* Lumbra */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DDD00002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAA00001 /* LumbraApp.swift in Sources */,
+				AAA00002 /* LumbraViewModel.swift in Sources */,
+				AAA00003 /* LumbraPanel.swift in Sources */,
+				AAA00004 /* LocalServer.swift in Sources */,
+				AAA00005 /* GameModels.swift in Sources */,
+				AAA00006 /* RPGViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DDD00003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		EEE00004 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Lumbra/Info.plist;
+				INFOPLIST_KEY_LSUIElement = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lumbra.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EEE00005 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Lumbra/Info.plist;
+				INFOPLIST_KEY_LSUIElement = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lumbra.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		EEE00006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		EEE00007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		EEE00001 /* Build configuration list for PBXProject "Lumbra" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EEE00006 /* Debug */,
+				EEE00007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EEE00003 /* Build configuration list for PBXNativeTarget "Lumbra" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EEE00004 /* Debug */,
+				EEE00005 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = FFF00001 /* Project object */;
+}
