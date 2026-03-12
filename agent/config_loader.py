@@ -75,6 +75,7 @@ def get_npcs_for_zone(zone_name: str) -> list[dict]:
 
 def get_expedition_destination(risk_max: int) -> dict | None:
     import random as _rng
+
     candidates = [d for d in EXPEDITION_DESTINATIONS if d["risk"] <= risk_max]
     if not candidates:
         return EXPEDITION_DESTINATIONS[0] if EXPEDITION_DESTINATIONS else None

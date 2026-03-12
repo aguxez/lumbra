@@ -1,44 +1,44 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 class LumbraViewModel: ObservableObject {
-    @Published var gameState: GameStateResponse?
-    @Published var isAgentConnected: Bool = false
+  @Published var gameState: GameStateResponse?
+  @Published var isAgentConnected: Bool = false
 
-    private var disconnectTimer: AnyCancellable?
-    private let server = LocalServer()
+  private var disconnectTimer: AnyCancellable?
+  private let server = LocalServer()
 
-    init() {
-        server.onDataReceived = { [weak self] data in
-            guard let self else { return }
-            do {
-                let state = try JSONDecoder().decode(GameStateResponse.self, from: data)
-                self.gameState = state
-                self.isAgentConnected = true
-                self.resetDisconnectTimer()
-            } catch {
-                print("[ViewModel] JSON decode error: \(error)")
-            }
-        }
-
-        server.start()
+  init() {
+    server.onDataReceived = { [weak self] data in
+      guard let self else { return }
+      do {
+        let state = try JSONDecoder().decode(GameStateResponse.self, from: data)
+        self.gameState = state
+        self.isAgentConnected = true
+        self.resetDisconnectTimer()
+      } catch {
+        print("[ViewModel] JSON decode error: \(error)")
+      }
     }
 
-    deinit {
-        server.stop()
-    }
+    server.start()
+  }
 
-    var hpDisplay: String {
-        guard let gs = gameState else { return "---" }
-        return "\(gs.character.hp)/\(gs.character.max_hp)"
-    }
+  deinit {
+    server.stop()
+  }
 
-    private func resetDisconnectTimer() {
-        disconnectTimer?.cancel()
-        disconnectTimer = Just(())
-            .delay(for: .seconds(90), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.isAgentConnected = false
-            }
-    }
+  var hpDisplay: String {
+    guard let gs = gameState else { return "---" }
+    return "\(gs.character.hp)/\(gs.character.max_hp)"
+  }
+
+  private func resetDisconnectTimer() {
+    disconnectTimer?.cancel()
+    disconnectTimer = Just(())
+      .delay(for: .seconds(90), scheduler: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.isAgentConnected = false
+      }
+  }
 }

@@ -93,7 +93,9 @@ def get_exploration_text(zone: str) -> str:
     return get_exploration_event()
 
 
-def get_npc_dialogue(npc_name: str, npc_role: str, zone: str, affinity: int) -> str | None:
+def get_npc_dialogue(
+    npc_name: str, npc_role: str, zone: str, affinity: int
+) -> str | None:
     if ai_brain and tokenizer and model:
         return ai_brain.generate_npc_dialogue(
             tokenizer, model, npc_name, npc_role, zone, affinity
@@ -219,7 +221,9 @@ def tick_quest_complete(state: GameState):
         exp = create_expedition(danger)
         if exp and sum(1 for e in state.expeditions if e.status == "active") < 3:
             state.expeditions.append(exp)
-            state.add_log(f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)")
+            state.add_log(
+                f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)"
+            )
 
     # Maybe move zones
     new_zone = pick_next_zone(state.zone, state.character.effective_attack)
@@ -242,7 +246,9 @@ def tick_buffs(state: GameState):
             expired.append(buff)
     for buff in expired:
         state.character.active_buffs.remove(buff)
-        state.add_log(f"Buff from {buff.source} (+{buff.value} {buff.buff_type}) expired.")
+        state.add_log(
+            f"Buff from {buff.source} (+{buff.value} {buff.buff_type}) expired."
+        )
 
 
 def tick_expeditions(state: GameState):
@@ -277,10 +283,7 @@ def tick_expeditions(state: GameState):
                         state.add_log(equip_msg)
 
     # Clean up finished expeditions (keep last 5 completed for history)
-    state.expeditions = [
-        e for e in state.expeditions
-        if e.status == "active"
-    ]
+    state.expeditions = [e for e in state.expeditions if e.status == "active"]
 
 
 def maybe_launch_expedition(state: GameState):
@@ -297,7 +300,9 @@ def maybe_launch_expedition(state: GameState):
     exp = create_expedition(danger)
     if exp:
         state.expeditions.append(exp)
-        state.add_log(f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)")
+        state.add_log(
+            f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)"
+        )
 
 
 def send_state(state: GameState):
