@@ -19,13 +19,49 @@
         "effect_value": 20
       },
       {
-        "name": "Healing Herb",
+        "name": "Health Potion",
         "rarity": "common",
         "item_type": "consumable",
         "attack": 0,
         "defense": 0,
         "effect_type": "heal",
-        "effect_value": 10
+        "effect_value": 20
+      },
+      {
+        "name": "Leather Armor",
+        "rarity": "common",
+        "item_type": "armor",
+        "attack": 0,
+        "defense": 3,
+        "effect_type": null,
+        "effect_value": 0
+      },
+      {
+        "name": "Iron Sword",
+        "rarity": "common",
+        "item_type": "weapon",
+        "attack": 3,
+        "defense": 0,
+        "effect_type": null,
+        "effect_value": 0
+      },
+      {
+        "name": "Steel Blade",
+        "rarity": "uncommon",
+        "item_type": "weapon",
+        "attack": 5,
+        "defense": 0,
+        "effect_type": null,
+        "effect_value": 0
+      },
+      {
+        "name": "Steel Blade",
+        "rarity": "uncommon",
+        "item_type": "weapon",
+        "attack": 5,
+        "defense": 0,
+        "effect_type": null,
+        "effect_value": 0
       },
       {
         "name": "Health Potion",
@@ -35,21 +71,76 @@
         "defense": 0,
         "effect_type": "heal",
         "effect_value": 20
+      },
+      {
+        "name": "Venom Dagger",
+        "rarity": "uncommon",
+        "item_type": "weapon",
+        "attack": 7,
+        "defense": 0,
+        "effect_type": null,
+        "effect_value": 0
       }
     ],
-    "weapon": null,
-    "armor": null
+    "weapon": "Venom Dagger",
+    "armor": "Leather Armor",
+    "active_buffs": []
   },
   "quest": {
-    "description": "Find the slime that will protect you from the wild chickens.",
-    "target": "Field Rat",
+    "description": "A fiery guardian with glowing eyes, it wields flame and seeks to stop the dragon.",
+    "target": "Wyvern",
     "goal": 3,
     "progress": 0,
-    "reward_xp": 45,
-    "reward_item": "Healing Herb"
+    "reward_xp": 85,
+    "reward_item": null
   },
-  "combat": null,
+  "combat": {
+    "enemy": {
+      "name": "Ancient Dragon",
+      "hp": 18,
+      "max_hp": 60,
+      "attack": 18,
+      "defense": 12
+    },
+    "turn": 3,
+    "ai_strategy": "attack"
+  },
+  "npc_relationships": {
+    "Meadow Sage Elira": 5,
+    "Ranger Thalia": 5,
+    "Hermit Malachar": 5
+  },
+  "expeditions": [
+    {
+      "destination": "Moonlit Caverns",
+      "description": "Shimmering caves where bioluminescent fungi light the way to hidden treasures.",
+      "duration": 13,
+      "progress": 12,
+      "status": "active",
+      "events": [],
+      "rewards": [],
+      "reward_xp": 46,
+      "risk_level": 2
+    },
+    {
+      "destination": "Sunken Library",
+      "description": "A flooded archive of forbidden knowledge, guarded by spectral librarians.",
+      "duration": 14,
+      "progress": 7,
+      "status": "active",
+      "events": [
+        "The scouts discovered a hidden chamber where they found a sealed book.",
+        "An expedition encountered a mysterious glowing chamber as they ventured deeper into the Sunken Library.",
+        "The scouts discover old campfire remains.",
+        "A scout finds a mysterious stone artifact embedded in the ship's hull."
+      ],
+      "rewards": [],
+      "reward_xp": 76,
+      "risk_level": 3
+    }
+  ],
   "log": [
-    "The sun dips low in the Peaceful Meadow, casting golden light on the grass."
+    "You strike the Ancient Dragon for 21 damage!",
+    "The Ancient Dragon hits you for 10 damage!"
   ]
 }

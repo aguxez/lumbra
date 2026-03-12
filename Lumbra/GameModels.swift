@@ -7,6 +7,8 @@ struct GameStateResponse: Codable {
     let zone: String
     let quest: QuestState?
     let combat: CombatState?
+    let npc_encounter: NPCEncounterState?
+    let expeditions: [ExpeditionState]?
     let log: [String]
 }
 
@@ -22,6 +24,7 @@ struct CharacterState: Codable {
     let armor: String?
     let effective_attack: Int?
     let effective_defense: Int?
+    let active_buffs: [ActiveBuffState]?
 }
 
 struct InventoryItem: Codable, Identifiable {
@@ -52,4 +55,36 @@ struct CombatState: Codable {
     let enemy_defense: Int
     let turn: Int
     let ai_strategy: String
+}
+
+struct ActiveBuffState: Codable {
+    let source: String
+    let buff_type: String
+    let value: Int
+    let ticks_remaining: Int
+}
+
+struct NPCEncounterState: Codable {
+    let npc_name: String
+    let npc_role: String
+    let dialogue: String
+    let interaction_type: String
+    let offer_item: String?
+    let request_item: String?
+    let buff_type: String?
+    let buff_value: Int?
+    let buff_ticks: Int?
+}
+
+struct ExpeditionState: Codable, Identifiable {
+    var id: String { destination + "_" + String(duration) }
+    let destination: String
+    let description: String
+    let duration: Int
+    let progress: Int
+    let status: String
+    let events: [String]?
+    let rewards: [String]?
+    let reward_xp: Int?
+    let risk_level: Int?
 }

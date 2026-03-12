@@ -259,6 +259,155 @@
       "loot": ["Flame Sword", "Dragon Scale Armor", "Health Potion"]
     }
   ],
+  "npcs": [
+    {
+      "name": "Old Farmer Gregor",
+      "role": "merchant",
+      "zone": "Peaceful Meadow",
+      "trades": [
+        { "offer": "Healing Herb", "request": null },
+        { "offer": "Health Potion", "request": "Healing Herb" }
+      ],
+      "buffs": [{ "type": "defense", "value": 2, "ticks": 10 }]
+    },
+    {
+      "name": "Meadow Sage Elira",
+      "role": "sage",
+      "zone": "Peaceful Meadow",
+      "trades": [],
+      "buffs": [{ "type": "attack", "value": 2, "ticks": 8 }]
+    },
+    {
+      "name": "Ranger Thalia",
+      "role": "wanderer",
+      "zone": "Whispering Woods",
+      "trades": [{ "offer": "Forest Amulet", "request": "Iron Sword" }],
+      "buffs": [{ "type": "attack", "value": 3, "ticks": 10 }]
+    },
+    {
+      "name": "Blacksmith Duran",
+      "role": "blacksmith",
+      "zone": "Whispering Woods",
+      "trades": [
+        { "offer": "Iron Sword", "request": "Healing Herb" },
+        { "offer": "Leather Armor", "request": "Healing Herb" }
+      ],
+      "buffs": [{ "type": "defense", "value": 3, "ticks": 10 }]
+    },
+    {
+      "name": "Hermit Malachar",
+      "role": "sage",
+      "zone": "Dark Forest",
+      "trades": [{ "offer": "Steel Blade", "request": "Iron Sword" }],
+      "buffs": [{ "type": "attack", "value": 4, "ticks": 12 }]
+    },
+    {
+      "name": "Ghost Merchant Vex",
+      "role": "merchant",
+      "zone": "Dark Forest",
+      "trades": [
+        { "offer": "Shadow Cloak", "request": "Leather Armor" },
+        { "offer": "Iron Shield", "request": "Wooden Shield" }
+      ],
+      "buffs": [{ "type": "defense", "value": 4, "ticks": 8 }]
+    },
+    {
+      "name": "Witch Doctor Zara",
+      "role": "sage",
+      "zone": "Cursed Swamp",
+      "trades": [{ "offer": "Venom Dagger", "request": "Steel Blade" }],
+      "buffs": [{ "type": "attack", "value": 5, "ticks": 10 }]
+    },
+    {
+      "name": "Swamp Trader Bogden",
+      "role": "merchant",
+      "zone": "Cursed Swamp",
+      "trades": [
+        { "offer": "Swamp Boots", "request": "Leather Armor" },
+        { "offer": "Health Potion", "request": null }
+      ],
+      "buffs": [{ "type": "defense", "value": 5, "ticks": 10 }]
+    },
+    {
+      "name": "Dragonsworn Kael",
+      "role": "blacksmith",
+      "zone": "Dragon's Peak",
+      "trades": [
+        { "offer": "Flame Sword", "request": "Venom Dagger" },
+        { "offer": "Dragon Scale Armor", "request": "Shadow Cloak" }
+      ],
+      "buffs": [{ "type": "attack", "value": 6, "ticks": 12 }]
+    },
+    {
+      "name": "Oracle Seraphine",
+      "role": "sage",
+      "zone": "Dragon's Peak",
+      "trades": [{ "offer": "Dragon's Heart", "request": "Flame Sword" }],
+      "buffs": [{ "type": "defense", "value": 6, "ticks": 12 }]
+    }
+  ],
+  "expedition_destinations": [
+    {
+      "name": "Forgotten Ruins",
+      "risk": 1,
+      "duration_range": [8, 12],
+      "reward_pool": ["Healing Herb", "Health Potion", "Wooden Shield"],
+      "xp_range": [20, 40],
+      "flavor": "Ancient ruins half-buried in wildflowers, said to hold trinkets of a lost age."
+    },
+    {
+      "name": "Moonlit Caverns",
+      "risk": 2,
+      "duration_range": [10, 16],
+      "reward_pool": [
+        "Iron Sword",
+        "Leather Armor",
+        "Forest Amulet",
+        "Health Potion"
+      ],
+      "xp_range": [40, 70],
+      "flavor": "Shimmering caves where bioluminescent fungi light the way to hidden treasures."
+    },
+    {
+      "name": "Sunken Library",
+      "risk": 3,
+      "duration_range": [14, 20],
+      "reward_pool": [
+        "Steel Blade",
+        "Iron Shield",
+        "Shadow Cloak",
+        "Health Potion"
+      ],
+      "xp_range": [60, 100],
+      "flavor": "A flooded archive of forbidden knowledge, guarded by spectral librarians."
+    },
+    {
+      "name": "Venomfang Nest",
+      "risk": 4,
+      "duration_range": [18, 25],
+      "reward_pool": [
+        "Venom Dagger",
+        "Swamp Boots",
+        "Witch's Staff",
+        "Health Potion"
+      ],
+      "xp_range": [80, 130],
+      "flavor": "A fetid warren of poisonous creatures, rich with alchemical reagents."
+    },
+    {
+      "name": "Dragon's Hoard",
+      "risk": 5,
+      "duration_range": [22, 30],
+      "reward_pool": [
+        "Flame Sword",
+        "Dragon Scale Armor",
+        "Dragon's Heart",
+        "Health Potion"
+      ],
+      "xp_range": [120, 200],
+      "flavor": "The legendary treasure vault beneath the volcanic peak, guarded by dragonfire."
+    }
+  ],
   "zones": [
     { "name": "Peaceful Meadow", "danger": 1, "monster_types": ["beast"] },
     {

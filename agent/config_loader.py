@@ -63,3 +63,19 @@ def get_loot_for_mob(mob_name: str) -> list[dict]:
 
 def get_zone(name: str) -> dict | None:
     return next((z for z in ZONES if z["name"] == name), None)
+
+
+NPCS: list[dict] = _CONFIG.get("npcs", [])
+EXPEDITION_DESTINATIONS: list[dict] = _CONFIG.get("expedition_destinations", [])
+
+
+def get_npcs_for_zone(zone_name: str) -> list[dict]:
+    return [n for n in NPCS if n["zone"] == zone_name]
+
+
+def get_expedition_destination(risk_max: int) -> dict | None:
+    import random as _rng
+    candidates = [d for d in EXPEDITION_DESTINATIONS if d["risk"] <= risk_max]
+    if not candidates:
+        return EXPEDITION_DESTINATIONS[0] if EXPEDITION_DESTINATIONS else None
+    return _rng.choice(candidates)

@@ -1,17 +1,23 @@
 import json
+import random
 import time
 
 import requests
 
 from combat import apply_stat_growth, resolve_round
-from config_loader import ITEMS_BY_NAME
+from config_loader import ITEMS_BY_NAME, get_zone
 from game_state import Combat, GameState, InventoryItem, Quest
 from world import (
+    create_expedition,
     generate_hardcoded_quest,
+    get_expedition_event,
     get_exploration_event,
     pick_next_zone,
+    resolve_expedition,
+    resolve_npc_interaction,
     roll_encounter,
     roll_loot,
+    roll_npc_encounter,
 )
 
 
@@ -87,6 +93,22 @@ def get_exploration_text(zone: str) -> str:
     return get_exploration_event()
 
 
+def get_npc_dialogue(npc_name: str, npc_role: str, zone: str, affinity: int) -> str | None:
+    if ai_brain and tokenizer and model:
+        return ai_brain.generate_npc_dialogue(
+            tokenizer, model, npc_name, npc_role, zone, affinity
+        )
+    return None
+
+
+def get_expedition_text(destination: str, progress: int, duration: int) -> str | None:
+    if ai_brain and tokenizer and model:
+        return ai_brain.generate_expedition_event(
+            tokenizer, model, destination, progress, duration
+        )
+    return None
+
+
 def handle_death(state: GameState):
     state.character.hp = state.character.max_hp
     state.character.xp = max(0, int(state.character.xp * 0.9))
@@ -129,19 +151,7 @@ def tick_combat(state: GameState):
         # Loot drop
         loot = roll_loot(combat.enemy.name)
         if loot:
-            item = InventoryItem(
-                name=loot["name"],
-                rarity=loot.get("rarity", "common"),
-                item_type=loot.get("type", "accessory"),
-                attack=loot.get("attack", 0),
-                defense=loot.get("defense", 0),
-                effect_type=loot.get("effect", {}).get("type")
-                if loot.get("effect")
-                else None,
-                effect_value=loot.get("effect", {}).get("value", 0)
-                if loot.get("effect")
-                else 0,
-            )
+            item = InventoryItem.from_config(loot)
             state.character.inventory.append(item)
             state.add_log(f"Loot: {item.name} ({item.rarity})!")
             equip_msg = auto_equip(state.character, item)
@@ -158,8 +168,29 @@ def tick_quest(state: GameState):
         state.combat = Combat(enemy=enemy)
         state.add_log(f"A wild {enemy.name} appears!")
     else:
-        event = get_exploration_text(state.zone)
-        state.add_log(event)
+        # Try NPC encounter first
+        encounter = roll_npc_encounter(state)
+        if encounter:
+            # Try AI dialogue
+            affinity = state.npc_relationships.get(encounter.npc_name, 0)
+            ai_dialogue = get_npc_dialogue(
+                encounter.npc_name, encounter.npc_role, state.zone, affinity
+            )
+            if ai_dialogue:
+                encounter.dialogue = ai_dialogue
+
+            state.npc_encounter = encounter
+            state.add_log(f"You meet {encounter.npc_name} ({encounter.npc_role}).")
+            state.add_log(f'"{encounter.dialogue}"')
+
+            # Resolve the interaction
+            interaction_logs = resolve_npc_interaction(state, encounter)
+            for msg in interaction_logs:
+                state.add_log(msg)
+        else:
+            state.npc_encounter = None
+            event = get_exploration_text(state.zone)
+            state.add_log(event)
 
 
 def tick_quest_complete(state: GameState):
@@ -170,19 +201,7 @@ def tick_quest_complete(state: GameState):
     if quest.reward_item:
         item_data = ITEMS_BY_NAME.get(quest.reward_item)
         if item_data:
-            item = InventoryItem(
-                name=item_data["name"],
-                rarity=item_data.get("rarity", "uncommon"),
-                item_type=item_data.get("type", "accessory"),
-                attack=item_data.get("attack", 0),
-                defense=item_data.get("defense", 0),
-                effect_type=item_data.get("effect", {}).get("type")
-                if item_data.get("effect")
-                else None,
-                effect_value=item_data.get("effect", {}).get("value", 0)
-                if item_data.get("effect")
-                else 0,
-            )
+            item = InventoryItem.from_config(item_data, default_rarity="uncommon")
         else:
             item = InventoryItem(name=quest.reward_item, rarity="uncommon")
         state.character.inventory.append(item)
@@ -192,6 +211,15 @@ def tick_quest_complete(state: GameState):
             state.add_log(equip_msg)
 
     state.quest = None
+
+    # Maybe launch an expedition on quest completion (25% chance)
+    if random.random() < 0.25:
+        zone_data = get_zone(state.zone)
+        danger = zone_data["danger"] if zone_data else 1
+        exp = create_expedition(danger)
+        if exp and sum(1 for e in state.expeditions if e.status == "active") < 3:
+            state.expeditions.append(exp)
+            state.add_log(f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)")
 
     # Maybe move zones
     new_zone = pick_next_zone(state.zone, state.character.effective_attack)
@@ -204,6 +232,72 @@ def tick_idle(state: GameState):
     quest_data = get_quest(state.zone)
     state.quest = Quest(**quest_data)
     state.add_log(f"New quest: {state.quest.description}")
+
+
+def tick_buffs(state: GameState):
+    expired = []
+    for buff in state.character.active_buffs:
+        buff.ticks_remaining -= 1
+        if buff.ticks_remaining <= 0:
+            expired.append(buff)
+    for buff in expired:
+        state.character.active_buffs.remove(buff)
+        state.add_log(f"Buff from {buff.source} (+{buff.value} {buff.buff_type}) expired.")
+
+
+def tick_expeditions(state: GameState):
+    for exp in state.expeditions:
+        if exp.status != "active":
+            continue
+        exp.progress += 1
+
+        # Roll for flavor event (~30% chance)
+        if random.random() < 0.30:
+            ai_event = get_expedition_text(exp.destination, exp.progress, exp.duration)
+            event = ai_event or get_expedition_event()
+            exp.events.append(event)
+            if len(exp.events) > 5:
+                exp.events = exp.events[-5:]
+            state.add_log(f"[{exp.destination}] {event}")
+
+        # Check completion
+        if exp.is_complete:
+            logs = resolve_expedition(exp)
+            for msg in logs:
+                state.add_log(msg)
+            # Grant XP and loot
+            state.character.xp += exp.reward_xp
+            for item_name in exp.rewards:
+                item_data = ITEMS_BY_NAME.get(item_name)
+                if item_data:
+                    item = InventoryItem.from_config(item_data)
+                    state.character.inventory.append(item)
+                    equip_msg = auto_equip(state.character, item)
+                    if equip_msg:
+                        state.add_log(equip_msg)
+
+    # Clean up finished expeditions (keep last 5 completed for history)
+    state.expeditions = [
+        e for e in state.expeditions
+        if e.status == "active"
+    ]
+
+
+def maybe_launch_expedition(state: GameState):
+    active_count = sum(1 for e in state.expeditions if e.status == "active")
+    if active_count >= 3:
+        return
+    if state.combat:
+        return
+    if random.random() > 0.10:
+        return
+
+    zone_data = get_zone(state.zone)
+    danger = zone_data["danger"] if zone_data else 1
+    exp = create_expedition(danger)
+    if exp:
+        state.expeditions.append(exp)
+        state.add_log(f"Scouts depart for {exp.destination}! (risk {exp.risk_level}, ~{exp.duration} ticks)")
 
 
 def send_state(state: GameState):
@@ -244,6 +338,15 @@ def main():
         else:
             tick_idle(state)
             interval = TICK_IDLE
+
+        # Tick buffs and expeditions every tick
+        tick_buffs(state)
+        tick_expeditions(state)
+        maybe_launch_expedition(state)
+
+        # Clear NPC encounter if we're in combat now
+        if state.combat:
+            state.npc_encounter = None
 
         # Print tick summary
         print(
