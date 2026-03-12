@@ -97,6 +97,21 @@ class InventoryItem:
         )
 
 
+MAX_CONSUMABLE_PER_TYPE = 4
+
+
+def _item_to_dict(item: InventoryItem) -> dict:
+    return {
+        "name": item.name,
+        "rarity": item.rarity,
+        "item_type": item.item_type,
+        "attack": item.attack,
+        "defense": item.defense,
+        "effect_type": item.effect_type,
+        "effect_value": item.effect_value,
+    }
+
+
 @dataclass
 class Character:
     name: str = "Wanderer"
@@ -106,8 +121,9 @@ class Character:
     defense: int = 5
     xp: int = 0
     inventory: list[InventoryItem] = field(default_factory=list)
-    weapon: str | None = None
-    armor: str | None = None
+    equipped_weapon: InventoryItem | None = None
+    equipped_armor: InventoryItem | None = None
+    equipped_accessory: InventoryItem | None = None
     active_buffs: list[ActiveBuff] = field(default_factory=list)
 
     def is_alive(self) -> bool:
@@ -116,20 +132,18 @@ class Character:
     @property
     def effective_attack(self) -> int:
         bonus = 0
-        if self.weapon:
-            item = next((i for i in self.inventory if i.name == self.weapon), None)
-            if item:
-                bonus = item.attack
+        if self.equipped_weapon:
+            bonus = self.equipped_weapon.attack
         buff_bonus = sum(b.value for b in self.active_buffs if b.buff_type == "attack")
         return self.attack + bonus + buff_bonus
 
     @property
     def effective_defense(self) -> int:
         bonus = 0
-        if self.armor:
-            item = next((i for i in self.inventory if i.name == self.armor), None)
-            if item:
-                bonus = item.defense
+        if self.equipped_armor:
+            bonus = self.equipped_armor.defense
+        if self.equipped_accessory:
+            bonus += self.equipped_accessory.defense
         buff_bonus = sum(b.value for b in self.active_buffs if b.buff_type == "defense")
         return self.defense + bonus + buff_bonus
 
@@ -141,20 +155,18 @@ class Character:
             "attack": self.attack,
             "defense": self.defense,
             "xp": self.xp,
-            "inventory": [
-                {
-                    "name": i.name,
-                    "rarity": i.rarity,
-                    "item_type": i.item_type,
-                    "attack": i.attack,
-                    "defense": i.defense,
-                    "effect_type": i.effect_type,
-                    "effect_value": i.effect_value,
-                }
-                for i in self.inventory
-            ],
-            "weapon": self.weapon,
-            "armor": self.armor,
+            "equipment": {
+                "weapon": _item_to_dict(self.equipped_weapon)
+                if self.equipped_weapon
+                else None,
+                "armor": _item_to_dict(self.equipped_armor)
+                if self.equipped_armor
+                else None,
+                "accessory": _item_to_dict(self.equipped_accessory)
+                if self.equipped_accessory
+                else None,
+            },
+            "inventory": [_item_to_dict(i) for i in self.inventory],
             "effective_attack": self.effective_attack,
             "effective_defense": self.effective_defense,
             "active_buffs": [
@@ -263,10 +275,30 @@ class GameState:
             self.log = self.log[-50:]
 
     def save(self, path: str = SAVE_PATH):
+        char = self.character
+        char_data = {
+            "name": char.name,
+            "hp": char.hp,
+            "max_hp": char.max_hp,
+            "attack": char.attack,
+            "defense": char.defense,
+            "xp": char.xp,
+            "inventory": [asdict(i) for i in char.inventory],
+            "equipped_weapon": asdict(char.equipped_weapon)
+            if char.equipped_weapon
+            else None,
+            "equipped_armor": asdict(char.equipped_armor)
+            if char.equipped_armor
+            else None,
+            "equipped_accessory": asdict(char.equipped_accessory)
+            if char.equipped_accessory
+            else None,
+            "active_buffs": [asdict(b) for b in char.active_buffs],
+        }
         data = {
             "tick": self.tick,
             "zone": self.zone,
-            "character": asdict(self.character),
+            "character": char_data,
             "quest": asdict(self.quest) if self.quest else None,
             "combat": {
                 "enemy": asdict(self.combat.enemy),
@@ -293,24 +325,27 @@ class GameState:
             return cls()
 
         char_data = data.get("character", {})
-        raw_inventory = char_data.pop("inventory", [])
-        inventory = [
-            InventoryItem(
-                name=i["name"],
-                rarity=i.get("rarity", "common"),
-                item_type=i.get("item_type", "accessory"),
-                attack=i.get("attack", 0),
-                defense=i.get("defense", 0),
-                effect_type=i.get("effect_type"),
-                effect_value=i.get("effect_value", 0),
+
+        def _load_item(d: dict | None) -> InventoryItem | None:
+            if not d:
+                return None
+            return InventoryItem(
+                name=d["name"],
+                rarity=d.get("rarity", "common"),
+                item_type=d.get("item_type", "accessory"),
+                attack=d.get("attack", 0),
+                defense=d.get("defense", 0),
+                effect_type=d.get("effect_type"),
+                effect_value=d.get("effect_value", 0),
             )
-            for i in raw_inventory
-        ]
-        # Remove computed properties before constructing
-        char_data.pop("effective_attack", None)
-        char_data.pop("effective_defense", None)
-        weapon = char_data.pop("weapon", None)
-        armor = char_data.pop("armor", None)
+
+        raw_inventory = char_data.pop("inventory", [])
+        inventory = [item for i in raw_inventory if i and (item := _load_item(i))]
+
+        equipped_weapon = _load_item(char_data.pop("equipped_weapon", None))
+        equipped_armor = _load_item(char_data.pop("equipped_armor", None))
+        equipped_accessory = _load_item(char_data.pop("equipped_accessory", None))
+
         raw_buffs = char_data.pop("active_buffs", [])
         active_buffs = [
             ActiveBuff(
@@ -321,11 +356,20 @@ class GameState:
             )
             for b in raw_buffs
         ]
+
+        # Remove any extra keys not in Character fields
+        char_data.pop("effective_attack", None)
+        char_data.pop("effective_defense", None)
+        char_data.pop("weapon", None)
+        char_data.pop("armor", None)
+        char_data.pop("equipment", None)
+
         character = Character(
             **char_data,
             inventory=inventory,
-            weapon=weapon,
-            armor=armor,
+            equipped_weapon=equipped_weapon,
+            equipped_armor=equipped_armor,
+            equipped_accessory=equipped_accessory,
             active_buffs=active_buffs,
         )
 

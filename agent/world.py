@@ -179,27 +179,43 @@ def roll_npc_encounter(state) -> NPCEncounter | None:
     return encounter
 
 
+def _find_and_remove_item(character, item_name: str) -> bool:
+    """Search inventory and equipment slots for an item.
+
+    Remove and return True if found.
+    """
+    # Check inventory first
+    for i, item in enumerate(character.inventory):
+        if item.name == item_name:
+            character.inventory.pop(i)
+            return True
+    # Check equipment slots
+    if character.equipped_weapon and character.equipped_weapon.name == item_name:
+        character.equipped_weapon = None
+        return True
+    if character.equipped_armor and character.equipped_armor.name == item_name:
+        character.equipped_armor = None
+        return True
+    if character.equipped_accessory and character.equipped_accessory.name == item_name:
+        character.equipped_accessory = None
+        return True
+    return False
+
+
 def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
+    from main import equip_or_stash
+
     logs = []
     if encounter.interaction_type == "trade":
         # Check if player has the requested item (or request is None = free gift)
         if encounter.request_item:
-            owned = next(
-                (
-                    i
-                    for i in state.character.inventory
-                    if i.name == encounter.request_item
-                ),
-                None,
-            )
-            if not owned:
+            if not _find_and_remove_item(state.character, encounter.request_item):
                 logs.append(
                     f"{encounter.npc_name} wanted "
                     f"{encounter.request_item}, "
                     "but you don't have it."
                 )
                 return logs
-            state.character.inventory.remove(owned)
             logs.append(f"Gave {encounter.request_item} to {encounter.npc_name}.")
 
         # Add offered item
@@ -209,8 +225,8 @@ def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
                 item = InventoryItem.from_config(item_data)
             else:
                 item = InventoryItem(name=encounter.offer_item)
-            state.character.inventory.append(item)
             logs.append(f"Received {encounter.offer_item} from {encounter.npc_name}!")
+            logs.extend(equip_or_stash(state.character, item))
 
     elif encounter.interaction_type == "buff":
         assert encounter.buff_type is not None
