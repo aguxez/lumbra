@@ -67,6 +67,16 @@ struct LumbraPanel: View {
                     CombatCardView(combat: combat)
                 }
 
+                // NPC encounter
+                if let npc = gs.npc_encounter {
+                    NPCCardView(encounter: npc)
+                }
+
+                // Expeditions
+                if let expeditions = gs.expeditions, !expeditions.isEmpty {
+                    ExpeditionPanelView(expeditions: expeditions)
+                }
+
                 // Event log
                 if !gs.log.isEmpty {
                     Divider()

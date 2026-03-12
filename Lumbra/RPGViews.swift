@@ -191,6 +191,156 @@ struct EventLogView: View {
     }
 }
 
+struct NPCCardView: View {
+    let encounter: NPCEncounterState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "person.wave.2")
+                    .font(.caption)
+                    .foregroundColor(.teal)
+                Text(encounter.npc_name)
+                    .font(.caption.bold())
+                    .foregroundColor(.teal)
+                Spacer()
+                Text(encounter.npc_role.capitalized)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            Text(encounter.dialogue)
+                .font(.caption)
+                .italic()
+                .lineLimit(3)
+
+            if encounter.interaction_type == "trade" {
+                HStack(spacing: 4) {
+                    if let request = encounter.request_item {
+                        Text("Trade: \(request)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "arrow.right")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Gift:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    if let offer = encounter.offer_item {
+                        Text(offer)
+                            .font(.caption2.bold())
+                            .foregroundColor(.teal)
+                    }
+                }
+            } else if encounter.interaction_type == "buff" {
+                if let buffType = encounter.buff_type, let buffVal = encounter.buff_value, let ticks = encounter.buff_ticks {
+                    Text("Buff: +\(buffVal) \(buffType) for \(ticks) ticks")
+                        .font(.caption2)
+                        .foregroundColor(.cyan)
+                }
+            } else {
+                Text("Shared ancient lore")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.teal.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.teal.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct ExpeditionPanelView: View {
+    let expeditions: [ExpeditionState]
+    @State private var isExpanded = true
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            VStack(spacing: 8) {
+                ForEach(expeditions) { exp in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(exp.destination)
+                                .font(.caption.bold())
+                            Spacer()
+                            if let risk = exp.risk_level {
+                                Text("Risk \(risk)")
+                                    .font(.caption2)
+                                    .foregroundColor(riskColor(risk))
+                            }
+                        }
+
+                        // Progress bar
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color.primary.opacity(0.1))
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color.indigo.opacity(0.7))
+                                    .frame(width: geo.size.width * Double(exp.progress) / Double(max(1, exp.duration)))
+                                    .animation(.easeInOut(duration: 0.4), value: exp.progress)
+                            }
+                        }
+                        .frame(height: 5)
+
+                        HStack {
+                            Text("\(exp.progress)/\(exp.duration)")
+                                .font(.caption2.monospacedDigit())
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            if let xp = exp.reward_xp {
+                                Text("+\(xp) XP")
+                                    .font(.caption2)
+                                    .foregroundColor(.indigo)
+                            }
+                        }
+
+                        if let events = exp.events, let lastEvent = events.last {
+                            Text(lastEvent)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .italic()
+                                .lineLimit(2)
+                        }
+                    }
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.indigo.opacity(0.03))
+                    )
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "map")
+                    .font(.caption)
+                    .foregroundColor(.indigo)
+                Text("Expeditions (\(expeditions.count))")
+                    .font(.caption.bold())
+                    .foregroundColor(.indigo)
+            }
+        }
+    }
+
+    private func riskColor(_ risk: Int) -> Color {
+        switch risk {
+        case 1: return .green
+        case 2: return .yellow
+        case 3: return .orange
+        case 4...5: return .red
+        default: return .secondary
+        }
+    }
+}
+
 struct InventorySection: View {
     let items: [InventoryItem]
     var weapon: String? = nil

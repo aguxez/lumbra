@@ -22,6 +22,28 @@ def _truncate_sentence(text: str, max_len: int = 120) -> str | None:
     return None
 
 
+def _generate(tokenizer, model, prompt: str, max_tokens: int = 80, temperature: float = 0.9) -> str | None:
+    """Shared LLM generate-decode-clean pipeline."""
+    try:
+        messages = [{"role": "user", "content": prompt}]
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True,
+            enable_thinking=False,
+        )
+        inputs = tokenizer(text, return_tensors="pt")
+        outputs = model.generate(
+            **inputs, max_new_tokens=max_tokens, do_sample=True, temperature=temperature,
+        )
+        generated = outputs[0][inputs["input_ids"].shape[1]:]
+        result = tokenizer.decode(generated, skip_special_tokens=True).strip()
+        result = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
+        result = re.sub(r"<think>.*", "", result, flags=re.DOTALL).strip()
+        return result if result else None
+    except Exception as e:
+        print(f"[ai_brain] generation error: {e}")
+        return None
+
+
 def decide_combat_strategy(tokenizer, model, character_dict: dict, enemy_dict: dict) -> str:
     hp_pct = character_dict["hp"] / max(1, character_dict["max_hp"])
     prompt = (
@@ -36,26 +58,11 @@ def decide_combat_strategy(tokenizer, model, character_dict: dict, enemy_dict: d
         f"Reply with just the number."
     )
 
-    try:
-        messages = [{"role": "user", "content": prompt}]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        inputs = tokenizer(text, return_tensors="pt")
-        outputs = model.generate(
-            **inputs, max_new_tokens=40, do_sample=True, temperature=0.7,
-        )
-        generated = outputs[0][inputs["input_ids"].shape[1]:]
-        result = tokenizer.decode(generated, skip_special_tokens=True).strip()
-        result = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
-        result = re.sub(r"<think>.*", "", result, flags=re.DOTALL).strip()
-
+    result = _generate(tokenizer, model, prompt, max_tokens=40, temperature=0.7)
+    if result:
         first_digit = re.search(r"[123]", result)
         if first_digit:
             return {"1": "attack", "2": "defend", "3": "flee"}[first_digit.group()]
-    except Exception as e:
-        print(f"[ai_brain] combat strategy error: {e}")
 
     # Fallback: low HP → defend, very low → flee
     if hp_pct < 0.2:
@@ -80,21 +87,8 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
         f"DESCRIPTION: <one complete sentence, under 80 characters, ending with a period>"
     )
 
-    try:
-        messages = [{"role": "user", "content": prompt}]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        inputs = tokenizer(text, return_tensors="pt")
-        outputs = model.generate(
-            **inputs, max_new_tokens=120, do_sample=True, temperature=0.8,
-        )
-        generated = outputs[0][inputs["input_ids"].shape[1]:]
-        result = tokenizer.decode(generated, skip_special_tokens=True).strip()
-        result = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
-        result = re.sub(r"<think>.*", "", result, flags=re.DOTALL).strip()
-
+    result = _generate(tokenizer, model, prompt, max_tokens=120, temperature=0.8)
+    if result:
         target_match = re.search(r"TARGET:\s*(.+)", result)
         count_match = re.search(r"COUNT:\s*(\d+)", result)
         desc_match = re.search(r"DESCRIPTION:\s*(.+)", result)
@@ -126,8 +120,6 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
                 "reward_xp": count * 15 + zone_idx * 10,
                 "reward_item": reward_item,
             }
-    except Exception as e:
-        print(f"[ai_brain] quest generation error: {e}")
 
     return generate_hardcoded_quest(zone_name)
 
@@ -137,27 +129,37 @@ def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
         f"You are exploring the {zone_name}. "
         f"Describe one brief thing you see or experience (one complete sentence, under 80 characters, ending with a period)."
     )
-
-    try:
-        messages = [{"role": "user", "content": prompt}]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        inputs = tokenizer(text, return_tensors="pt")
-        outputs = model.generate(
-            **inputs, max_new_tokens=80, do_sample=True, temperature=0.9,
-        )
-        generated = outputs[0][inputs["input_ids"].shape[1]:]
-        result = tokenizer.decode(generated, skip_special_tokens=True).strip()
-        result = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
-        result = re.sub(r"<think>.*", "", result, flags=re.DOTALL).strip()
-
-        if result and len(result) > 5:
-            truncated = _truncate_sentence(result)
-            if truncated:
-                return truncated
-    except Exception as e:
-        print(f"[ai_brain] exploration event error: {e}")
-
+    result = _generate(tokenizer, model, prompt)
+    if result and len(result) > 5:
+        truncated = _truncate_sentence(result)
+        if truncated:
+            return truncated
     return random.choice(EXPLORATION_EVENTS)
+
+
+def generate_npc_dialogue(tokenizer, model, npc_name: str, npc_role: str, zone: str, affinity: int) -> str | None:
+    prompt = (
+        f"You are {npc_name}, a {npc_role} in the {zone}. "
+        f"The adventurer visits you (friendship level: {affinity}). "
+        f"Say one brief line in character (one complete sentence, under 80 characters, ending with a period)."
+    )
+    result = _generate(tokenizer, model, prompt)
+    if result and len(result) > 5:
+        truncated = _truncate_sentence(result)
+        if truncated:
+            return truncated
+    return None
+
+
+def generate_expedition_event(tokenizer, model, destination: str, progress: int, duration: int) -> str | None:
+    pct = int(progress / max(1, duration) * 100)
+    prompt = (
+        f"An expedition is exploring {destination} ({pct}% complete). "
+        f"Describe one brief event the scouts encounter (one complete sentence, under 80 characters, ending with a period)."
+    )
+    result = _generate(tokenizer, model, prompt)
+    if result and len(result) > 5:
+        truncated = _truncate_sentence(result)
+        if truncated:
+            return truncated
+    return None

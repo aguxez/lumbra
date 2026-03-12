@@ -8,6 +8,70 @@ SAVE_PATH = os.path.join(os.path.dirname(__file__), "savegame.json")
 
 
 @dataclass
+class ActiveBuff:
+    source: str
+    buff_type: str
+    value: int
+    ticks_remaining: int
+
+
+@dataclass
+class Expedition:
+    destination: str
+    description: str
+    duration: int
+    progress: int = 0
+    status: str = "active"
+    events: list[str] = field(default_factory=list)
+    rewards: list[str] = field(default_factory=list)
+    reward_xp: int = 0
+    risk_level: int = 1
+
+    @property
+    def is_complete(self) -> bool:
+        return self.progress >= self.duration
+
+    def to_dict(self) -> dict:
+        return {
+            "destination": self.destination,
+            "description": self.description,
+            "duration": self.duration,
+            "progress": self.progress,
+            "status": self.status,
+            "events": self.events[-3:],
+            "rewards": self.rewards,
+            "reward_xp": self.reward_xp,
+            "risk_level": self.risk_level,
+        }
+
+
+@dataclass
+class NPCEncounter:
+    npc_name: str
+    npc_role: str
+    dialogue: str
+    interaction_type: str
+    offer_item: Optional[str] = None
+    request_item: Optional[str] = None
+    buff_type: Optional[str] = None
+    buff_value: int = 0
+    buff_ticks: int = 0
+
+    def to_dict(self) -> dict:
+        return {
+            "npc_name": self.npc_name,
+            "npc_role": self.npc_role,
+            "dialogue": self.dialogue,
+            "interaction_type": self.interaction_type,
+            "offer_item": self.offer_item,
+            "request_item": self.request_item,
+            "buff_type": self.buff_type,
+            "buff_value": self.buff_value,
+            "buff_ticks": self.buff_ticks,
+        }
+
+
+@dataclass
 class InventoryItem:
     name: str
     rarity: str = "common"
@@ -16,6 +80,18 @@ class InventoryItem:
     defense: int = 0
     effect_type: Optional[str] = None
     effect_value: int = 0
+
+    @classmethod
+    def from_config(cls, data: dict, default_rarity: str = "common") -> "InventoryItem":
+        return cls(
+            name=data["name"],
+            rarity=data.get("rarity", default_rarity),
+            item_type=data.get("type", "accessory"),
+            attack=data.get("attack", 0),
+            defense=data.get("defense", 0),
+            effect_type=data.get("effect", {}).get("type") if data.get("effect") else None,
+            effect_value=data.get("effect", {}).get("value", 0) if data.get("effect") else 0,
+        )
 
 
 @dataclass
@@ -29,6 +105,7 @@ class Character:
     inventory: list[InventoryItem] = field(default_factory=list)
     weapon: Optional[str] = None
     armor: Optional[str] = None
+    active_buffs: list[ActiveBuff] = field(default_factory=list)
 
     def is_alive(self) -> bool:
         return self.hp > 0
@@ -40,7 +117,8 @@ class Character:
             item = next((i for i in self.inventory if i.name == self.weapon), None)
             if item:
                 bonus = item.attack
-        return self.attack + bonus
+        buff_bonus = sum(b.value for b in self.active_buffs if b.buff_type == "attack")
+        return self.attack + bonus + buff_bonus
 
     @property
     def effective_defense(self) -> int:
@@ -49,7 +127,8 @@ class Character:
             item = next((i for i in self.inventory if i.name == self.armor), None)
             if item:
                 bonus = item.defense
-        return self.defense + bonus
+        buff_bonus = sum(b.value for b in self.active_buffs if b.buff_type == "defense")
+        return self.defense + bonus + buff_bonus
 
     def to_dict(self) -> dict:
         return {
@@ -75,6 +154,15 @@ class Character:
             "armor": self.armor,
             "effective_attack": self.effective_attack,
             "effective_defense": self.effective_defense,
+            "active_buffs": [
+                {
+                    "source": b.source,
+                    "buff_type": b.buff_type,
+                    "value": b.value,
+                    "ticks_remaining": b.ticks_remaining,
+                }
+                for b in self.active_buffs
+            ],
         }
 
 
@@ -144,6 +232,9 @@ class GameState:
     zone: str = "Peaceful Meadow"
     quest: Optional[Quest] = None
     combat: Optional[Combat] = None
+    npc_encounter: Optional[NPCEncounter] = None
+    npc_relationships: dict = field(default_factory=dict)
+    expeditions: list[Expedition] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -154,6 +245,8 @@ class GameState:
             "zone": self.zone,
             "quest": self.quest.to_dict() if self.quest else None,
             "combat": self.combat.to_dict() if self.combat else None,
+            "npc_encounter": self.npc_encounter.to_dict() if self.npc_encounter else None,
+            "expeditions": [e.to_dict() for e in self.expeditions if e.status == "active"],
             "log": self.log[-10:],
         }
 
@@ -175,6 +268,8 @@ class GameState:
             }
             if self.combat
             else None,
+            "npc_relationships": self.npc_relationships,
+            "expeditions": [asdict(e) for e in self.expeditions],
             "log": self.log[-20:],
         }
         tmp = path + ".tmp"
@@ -209,8 +304,19 @@ class GameState:
         char_data.pop("effective_defense", None)
         weapon = char_data.pop("weapon", None)
         armor = char_data.pop("armor", None)
+        raw_buffs = char_data.pop("active_buffs", [])
+        active_buffs = [
+            ActiveBuff(
+                source=b["source"],
+                buff_type=b["buff_type"],
+                value=b["value"],
+                ticks_remaining=b["ticks_remaining"],
+            )
+            for b in raw_buffs
+        ]
         character = Character(
-            **char_data, inventory=inventory, weapon=weapon, armor=armor
+            **char_data, inventory=inventory, weapon=weapon, armor=armor,
+            active_buffs=active_buffs,
         )
 
         quest = None
@@ -227,12 +333,29 @@ class GameState:
                 ai_strategy=data["combat"].get("ai_strategy", "attack"),
             )
 
+        expeditions = [
+            Expedition(
+                destination=e["destination"],
+                description=e["description"],
+                duration=e["duration"],
+                progress=e.get("progress", 0),
+                status=e.get("status", "active"),
+                events=e.get("events", []),
+                rewards=e.get("rewards", []),
+                reward_xp=e.get("reward_xp", 0),
+                risk_level=e.get("risk_level", 1),
+            )
+            for e in data.get("expeditions", [])
+        ]
+
         state = cls(
             tick=data.get("tick", 0),
             character=character,
             zone=data.get("zone", "Peaceful Meadow"),
             quest=quest,
             combat=combat,
+            npc_relationships=data.get("npc_relationships", {}),
+            expeditions=expeditions,
             log=data.get("log", []),
         )
         return state
