@@ -9,17 +9,19 @@
 /* Begin PBXBuildFile section */
 		AAA00001 /* LumbraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00001; };
 		AAA00002 /* LumbraViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00002; };
-		AAA00003 /* LumbraPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00003; };
+		AAA00003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00003; };
 		AAA00004 /* LocalServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00006; };
 		AAA00005 /* GameModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00007; };
 		AAA00006 /* RPGViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00008; };
+		AAA00007 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB00009; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BBB00001 /* LumbraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumbraApp.swift; sourceTree = "<group>"; };
 		BBB00002 /* LumbraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumbraViewModel.swift; sourceTree = "<group>"; };
-		BBB00003 /* LumbraPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumbraPanel.swift; sourceTree = "<group>"; };
+		BBB00003 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		BBB00004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BBB00009 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		BBB00005 /* Lumbra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lumbra.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BBB00006 /* LocalServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServer.swift; sourceTree = "<group>"; };
 		BBB00007 /* GameModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModels.swift; sourceTree = "<group>"; };
@@ -40,7 +42,8 @@
 			children = (
 				BBB00001 /* LumbraApp.swift */,
 				BBB00002 /* LumbraViewModel.swift */,
-				BBB00003 /* LumbraPanel.swift */,
+				BBB00003 /* Theme.swift */,
+				BBB00009 /* MainWindowView.swift */,
 				BBB00006 /* LocalServer.swift */,
 				BBB00007 /* GameModels.swift */,
 				BBB00008 /* RPGViews.swift */,
@@ -111,7 +114,8 @@
 			files = (
 				AAA00001 /* LumbraApp.swift in Sources */,
 				AAA00002 /* LumbraViewModel.swift in Sources */,
-				AAA00003 /* LumbraPanel.swift in Sources */,
+				AAA00003 /* Theme.swift in Sources */,
+				AAA00007 /* MainWindowView.swift in Sources */,
 				AAA00004 /* LocalServer.swift in Sources */,
 				AAA00005 /* GameModels.swift in Sources */,
 				AAA00006 /* RPGViews.swift in Sources */,
