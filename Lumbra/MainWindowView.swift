@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MainWindowView: View {
     @ObservedObject var viewModel: LumbraViewModel
+    @State private var sidebarWidth: CGFloat = 260
+    @State private var dragStartWidth: CGFloat = 260
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,10 +47,31 @@ struct MainWindowView: View {
                         }
                         .padding(12)
                     }
-                    .frame(width: 200)
+                    .frame(width: sidebarWidth)
 
-                    Divider()
-                        .background(Theme.cardBorder)
+                    // Draggable divider
+                    Rectangle()
+                        .fill(Theme.cardBorder)
+                        .frame(width: 4)
+                        .padding(.horizontal, 4)
+                        .contentShape(Rectangle())
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.resizeLeftRight.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                        .gesture(
+                            DragGesture(minimumDistance: 1)
+                                .onChanged { value in
+                                    let newWidth = dragStartWidth + value.translation.width
+                                    sidebarWidth = min(max(newWidth, 180), 400)
+                                }
+                                .onEnded { _ in
+                                    dragStartWidth = sidebarWidth
+                                }
+                        )
 
                     // Right content
                     ScrollView {
