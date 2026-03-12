@@ -1,10 +1,64 @@
 import SwiftUI
 
+// MARK: - Character Card (extracted from LumbraPanel)
+
+struct CharacterCardView: View {
+    let character: CharacterState
+    let zone: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Text(character.name)
+                    .font(Theme.fontBody.bold())
+                    .foregroundColor(Theme.headerText)
+                Spacer()
+                Text(zone)
+                    .font(Theme.fontSmall)
+                    .foregroundColor(Theme.mutedText)
+            }
+
+            HStack(spacing: 8) {
+                HPBarView(current: character.hp, max: character.max_hp, height: Theme.hpBarHeight)
+                Text("\(character.hp)/\(character.max_hp)")
+                    .font(Theme.fontSmall.monospacedDigit())
+                    .foregroundColor(Theme.bodyText)
+                    .frame(width: 55, alignment: .trailing)
+            }
+
+            HStack(spacing: 16) {
+                if let effAtk = character.effective_attack, effAtk != character.attack {
+                    StatRowView(icon: "bolt.fill", label: "ATK", value: "\(effAtk) (\(character.attack))")
+                } else {
+                    StatRowView(icon: "bolt.fill", label: "ATK", value: "\(character.attack)")
+                }
+                if let effDef = character.effective_defense, effDef != character.defense {
+                    StatRowView(icon: "shield.fill", label: "DEF", value: "\(effDef) (\(character.defense))")
+                } else {
+                    StatRowView(icon: "shield.fill", label: "DEF", value: "\(character.defense)")
+                }
+                StatRowView(icon: "star.fill", label: "XP", value: "\(character.xp)")
+            }
+        }
+        .padding(Theme.cardPadding)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cardRadius)
+                .fill(Theme.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(Theme.cardBorder, lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - HP Bar
+
 struct HPBarView: View {
     let current: Int
     let max: Int
     var barColor: Color = .red
-    var height: CGFloat = 8
+    var height: CGFloat = Theme.hpBarHeight
 
     private var fraction: Double {
         guard max > 0 else { return 0 }
@@ -21,7 +75,7 @@ struct HPBarView: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: height / 2)
-                    .fill(Color.primary.opacity(0.1))
+                    .fill(Color.white.opacity(0.1))
 
                 RoundedRectangle(cornerRadius: height / 2)
                     .fill(displayColor)
@@ -33,6 +87,8 @@ struct HPBarView: View {
     }
 }
 
+// MARK: - Stat Row
+
 struct StatRowView: View {
     let icon: String
     let label: String
@@ -41,19 +97,22 @@ struct StatRowView: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+                .font(Theme.fontTiny)
+                .foregroundColor(Theme.mutedText)
                 .frame(width: 14)
             Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(Theme.fontSmall)
+                .foregroundColor(Theme.mutedText)
             Spacer()
             Text(value)
-                .font(.caption.monospacedDigit())
+                .font(Theme.fontSmall.monospacedDigit())
                 .bold()
+                .foregroundColor(Theme.bodyText)
         }
     }
 }
+
+// MARK: - Quest Card
 
 struct QuestCardView: View {
     let quest: QuestState
@@ -62,25 +121,26 @@ struct QuestCardView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Image(systemName: "scroll")
-                    .font(.caption)
+                    .font(Theme.fontSmall)
                     .foregroundColor(.yellow)
                 Text("Quest")
-                    .font(.caption.bold())
+                    .font(Theme.fontSmall.bold())
                     .foregroundColor(.yellow)
                 Spacer()
                 Text("\(quest.progress)/\(quest.goal)")
-                    .font(.caption.monospacedDigit().bold())
+                    .font(Theme.fontSmall.monospacedDigit().bold())
+                    .foregroundColor(Theme.bodyText)
             }
 
             Text(quest.description)
-                .font(.caption)
+                .font(Theme.fontSmall)
+                .foregroundColor(Theme.bodyText)
                 .lineLimit(2)
 
-            // Progress bar
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.primary.opacity(0.1))
+                        .fill(Color.white.opacity(0.1))
                     RoundedRectangle(cornerRadius: 3)
                         .fill(Color.yellow.opacity(0.8))
                         .frame(width: geo.size.width * Double(quest.progress) / Double(max(1, quest.goal)))
@@ -92,31 +152,34 @@ struct QuestCardView: View {
             if let reward = quest.reward_item {
                 HStack(spacing: 4) {
                     Text("Reward:")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(Theme.fontTiny)
+                        .foregroundColor(Theme.mutedText)
                     Text("\(quest.reward_xp) XP")
-                        .font(.caption2.bold())
+                        .font(Theme.fontTiny.bold())
+                        .foregroundColor(Theme.bodyText)
                     Text("+ \(reward)")
-                        .font(.caption2)
+                        .font(Theme.fontTiny)
                         .foregroundColor(.orange)
                 }
             } else {
                 Text("Reward: \(quest.reward_xp) XP")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(Theme.fontTiny)
+                    .foregroundColor(Theme.mutedText)
             }
         }
-        .padding(10)
+        .padding(Theme.cardPadding)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.yellow.opacity(0.05))
+            RoundedRectangle(cornerRadius: Theme.cardRadius)
+                .fill(Color.yellow.opacity(0.08))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.yellow.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(Color.yellow.opacity(0.25), lineWidth: 1)
                 )
         )
     }
 }
+
+// MARK: - Combat Card
 
 struct CombatCardView: View {
     let combat: CombatState
@@ -125,14 +188,15 @@ struct CombatCardView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Image(systemName: "flame")
-                    .font(.caption)
+                    .font(Theme.fontSmall)
                     .foregroundColor(.red)
                 Text("Combat — Turn \(combat.turn)")
-                    .font(.caption.bold())
+                    .font(Theme.fontSmall.bold())
                     .foregroundColor(.red)
                 Spacer()
                 Text(combat.ai_strategy.uppercased())
-                    .font(.caption2.bold())
+                    .font(Theme.fontTiny.bold())
+                    .foregroundColor(Theme.bodyText)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(strategyColor.opacity(0.2))
@@ -141,10 +205,12 @@ struct CombatCardView: View {
 
             HStack {
                 Text(combat.enemy_name)
-                    .font(.caption.bold())
+                    .font(Theme.fontSmall.bold())
+                    .foregroundColor(Theme.headerText)
                 Spacer()
                 Text("\(combat.enemy_hp)/\(combat.enemy_max_hp) HP")
-                    .font(.caption.monospacedDigit())
+                    .font(Theme.fontSmall.monospacedDigit())
+                    .foregroundColor(Theme.bodyText)
             }
 
             HPBarView(current: combat.enemy_hp, max: combat.enemy_max_hp, barColor: .red, height: 6)
@@ -154,13 +220,13 @@ struct CombatCardView: View {
                 StatRowView(icon: "shield.fill", label: "DEF", value: "\(combat.enemy_defense)")
             }
         }
-        .padding(10)
+        .padding(Theme.cardPadding)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.red.opacity(0.05))
+            RoundedRectangle(cornerRadius: Theme.cardRadius)
+                .fill(Color.red.opacity(0.08))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.red.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(Color.red.opacity(0.25), lineWidth: 1)
                 )
         )
     }
@@ -175,21 +241,40 @@ struct CombatCardView: View {
     }
 }
 
+// MARK: - Event Log
+
 struct EventLogView: View {
     let entries: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            ForEach(Array(entries.suffix(6).enumerated()), id: \.offset) { _, entry in
-                Text(entry)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: "text.book.closed")
+                    .font(Theme.fontSmall)
+                    .foregroundColor(Theme.accent)
+                Text("Event Log")
+                    .font(Theme.fontSmall.bold())
+                    .foregroundColor(Theme.accent)
+                Spacer()
             }
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(Array(entries.suffix(10).enumerated()), id: \.offset) { _, entry in
+                        Text(entry)
+                            .font(Theme.fontSmall)
+                            .foregroundColor(Theme.mutedText)
+                            .lineLimit(2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 120)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+// MARK: - NPC Card
 
 struct NPCCardView: View {
     let encounter: NPCEncounterState
@@ -198,19 +283,20 @@ struct NPCCardView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Image(systemName: "person.wave.2")
-                    .font(.caption)
+                    .font(Theme.fontSmall)
                     .foregroundColor(.teal)
                 Text(encounter.npc_name)
-                    .font(.caption.bold())
+                    .font(Theme.fontSmall.bold())
                     .foregroundColor(.teal)
                 Spacer()
                 Text(encounter.npc_role.capitalized)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(Theme.fontTiny)
+                    .foregroundColor(Theme.mutedText)
             }
 
             Text(encounter.dialogue)
-                .font(.caption)
+                .font(Theme.fontSmall)
+                .foregroundColor(Theme.bodyText)
                 .italic()
                 .lineLimit(3)
 
@@ -218,45 +304,47 @@ struct NPCCardView: View {
                 HStack(spacing: 4) {
                     if let request = encounter.request_item {
                         Text("Trade: \(request)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(Theme.fontTiny)
+                            .foregroundColor(Theme.mutedText)
                         Image(systemName: "arrow.right")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(Theme.fontTiny)
+                            .foregroundColor(Theme.mutedText)
                     } else {
                         Text("Gift:")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(Theme.fontTiny)
+                            .foregroundColor(Theme.mutedText)
                     }
                     if let offer = encounter.offer_item {
                         Text(offer)
-                            .font(.caption2.bold())
+                            .font(Theme.fontTiny.bold())
                             .foregroundColor(.teal)
                     }
                 }
             } else if encounter.interaction_type == "buff" {
                 if let buffType = encounter.buff_type, let buffVal = encounter.buff_value, let ticks = encounter.buff_ticks {
                     Text("Buff: +\(buffVal) \(buffType) for \(ticks) ticks")
-                        .font(.caption2)
+                        .font(Theme.fontTiny)
                         .foregroundColor(.cyan)
                 }
             } else {
                 Text("Shared ancient lore")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(Theme.fontTiny)
+                    .foregroundColor(Theme.mutedText)
             }
         }
-        .padding(10)
+        .padding(Theme.cardPadding)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.teal.opacity(0.05))
+            RoundedRectangle(cornerRadius: Theme.cardRadius)
+                .fill(Color.teal.opacity(0.08))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.teal.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .strokeBorder(Color.teal.opacity(0.25), lineWidth: 1)
                 )
         )
     }
 }
+
+// MARK: - Expedition Panel
 
 struct ExpeditionPanelView: View {
     let expeditions: [ExpeditionState]
@@ -269,20 +357,20 @@ struct ExpeditionPanelView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(exp.destination)
-                                .font(.caption.bold())
+                                .font(Theme.fontSmall.bold())
+                                .foregroundColor(Theme.headerText)
                             Spacer()
                             if let risk = exp.risk_level {
                                 Text("Risk \(risk)")
-                                    .font(.caption2)
-                                    .foregroundColor(riskColor(risk))
+                                    .font(Theme.fontTiny)
+                                    .foregroundColor(Self.riskColor(risk))
                             }
                         }
 
-                        // Progress bar
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(Color.primary.opacity(0.1))
+                                    .fill(Color.white.opacity(0.1))
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(Color.indigo.opacity(0.7))
                                     .frame(width: geo.size.width * Double(exp.progress) / Double(max(1, exp.duration)))
@@ -293,44 +381,45 @@ struct ExpeditionPanelView: View {
 
                         HStack {
                             Text("\(exp.progress)/\(exp.duration)")
-                                .font(.caption2.monospacedDigit())
-                                .foregroundColor(.secondary)
+                                .font(Theme.fontTiny.monospacedDigit())
+                                .foregroundColor(Theme.mutedText)
                             Spacer()
                             if let xp = exp.reward_xp {
                                 Text("+\(xp) XP")
-                                    .font(.caption2)
+                                    .font(Theme.fontTiny)
                                     .foregroundColor(.indigo)
                             }
                         }
 
                         if let events = exp.events, let lastEvent = events.last {
                             Text(lastEvent)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(Theme.fontTiny)
+                                .foregroundColor(Theme.mutedText)
                                 .italic()
                                 .lineLimit(2)
                         }
                     }
-                    .padding(8)
+                    .padding(10)
                     .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.indigo.opacity(0.03))
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.indigo.opacity(0.06))
                     )
                 }
             }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "map")
-                    .font(.caption)
+                    .font(Theme.fontSmall)
                     .foregroundColor(.indigo)
                 Text("Expeditions (\(expeditions.count))")
-                    .font(.caption.bold())
+                    .font(Theme.fontSmall.bold())
                     .foregroundColor(.indigo)
             }
         }
+        .tint(Theme.bodyText)
     }
 
-    private func riskColor(_ risk: Int) -> Color {
+    private static func riskColor(_ risk: Int) -> Color {
         switch risk {
         case 1: return .green
         case 2: return .yellow
@@ -341,64 +430,73 @@ struct ExpeditionPanelView: View {
     }
 }
 
+// MARK: - Inventory Section
+
 struct InventorySection: View {
     let items: [InventoryItem]
     var weapon: String? = nil
     var armor: String? = nil
-    @State private var isExpanded = false
+    @State private var isExpanded = true
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
             if items.isEmpty {
                 Text("Empty")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.fontSmall)
+                    .foregroundColor(Theme.mutedText)
             } else {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(items) { item in
-                        HStack(spacing: 4) {
-                            if item.name == weapon || item.name == armor {
-                                Text("E")
-                                    .font(.system(size: 8).bold())
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 3)
-                                    .padding(.vertical, 1)
-                                    .background(Color.blue)
-                                    .cornerRadius(3)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(items) { item in
+                            HStack(spacing: 4) {
+                                if item.name == weapon || item.name == armor {
+                                    Text("E")
+                                        .font(.system(size: 9).bold())
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 3)
+                                        .padding(.vertical, 1)
+                                        .background(Color.blue)
+                                        .cornerRadius(3)
+                                }
+                                Text(item.name)
+                                    .font(Theme.fontSmall)
+                                    .foregroundColor(Theme.bodyText)
+                                Spacer()
+                                if let atk = item.attack, atk > 0 {
+                                    Text("+\(atk) ATK")
+                                        .font(Theme.fontTiny)
+                                        .foregroundColor(.orange)
+                                }
+                                if let def = item.defense, def > 0 {
+                                    Text("+\(def) DEF")
+                                        .font(Theme.fontTiny)
+                                        .foregroundColor(.blue)
+                                }
+                                if item.effect_type == "heal", let val = item.effect_value, val > 0 {
+                                    Text("+\(val) HP")
+                                        .font(Theme.fontTiny)
+                                        .foregroundColor(.green)
+                                }
+                                Text(item.rarity)
+                                    .font(Theme.fontTiny)
+                                    .foregroundColor(rarityColor(item.rarity))
                             }
-                            Text(item.name)
-                                .font(.caption)
-                            Spacer()
-                            if let atk = item.attack, atk > 0 {
-                                Text("+\(atk) ATK")
-                                    .font(.caption2)
-                                    .foregroundColor(.orange)
-                            }
-                            if let def = item.defense, def > 0 {
-                                Text("+\(def) DEF")
-                                    .font(.caption2)
-                                    .foregroundColor(.blue)
-                            }
-                            if item.effect_type == "heal", let val = item.effect_value, val > 0 {
-                                Text("+\(val) HP")
-                                    .font(.caption2)
-                                    .foregroundColor(.green)
-                            }
-                            Text(item.rarity)
-                                .font(.caption2)
-                                .foregroundColor(rarityColor(item.rarity))
                         }
                     }
                 }
+                .frame(maxHeight: 150)
             }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "bag")
-                    .font(.caption)
+                    .font(Theme.fontSmall)
+                    .foregroundColor(Theme.accent)
                 Text("Inventory (\(items.count))")
-                    .font(.caption.bold())
+                    .font(Theme.fontSmall.bold())
+                    .foregroundColor(Theme.accent)
             }
         }
+        .tint(Theme.bodyText)
     }
 
     private func rarityColor(_ rarity: String) -> Color {
@@ -406,7 +504,7 @@ struct InventorySection: View {
         case "uncommon": return .green
         case "rare": return .blue
         case "legendary": return .purple
-        default: return .secondary
+        default: return Theme.mutedText
         }
     }
 }
