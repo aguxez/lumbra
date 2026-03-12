@@ -29,8 +29,8 @@ class LumbraViewModel: ObservableObject {
   }
 
   var hpDisplay: String {
-    guard let gs = gameState else { return "---" }
-    return "\(gs.character.hp)/\(gs.character.max_hp)"
+    guard let state = gameState else { return "---" }
+    return "\(state.character.hitPoints)/\(state.character.maxHitPoints)"
   }
 
   private func resetDisconnectTimer() {
