@@ -194,7 +194,9 @@ def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
             )
             if not owned:
                 logs.append(
-                    f"{encounter.npc_name} wanted {encounter.request_item}, but you don't have it."
+                    f"{encounter.npc_name} wanted "
+                    f"{encounter.request_item}, "
+                    "but you don't have it."
                 )
                 return logs
             state.character.inventory.remove(owned)
@@ -211,6 +213,7 @@ def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
             logs.append(f"Received {encounter.offer_item} from {encounter.npc_name}!")
 
     elif encounter.interaction_type == "buff":
+        assert encounter.buff_type is not None
         buff = ActiveBuff(
             source=encounter.npc_name,
             buff_type=encounter.buff_type,
@@ -219,7 +222,9 @@ def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
         )
         state.character.active_buffs.append(buff)
         logs.append(
-            f"{encounter.npc_name} grants +{encounter.buff_value} {encounter.buff_type} for {encounter.buff_ticks} ticks!"
+            f"{encounter.npc_name} grants "
+            f"+{encounter.buff_value} {encounter.buff_type} "
+            f"for {encounter.buff_ticks} ticks!"
         )
 
     elif encounter.interaction_type == "lore":
@@ -268,7 +273,6 @@ def resolve_expedition(expedition: Expedition) -> list[str]:
 
     # Success chance decreases with risk: 75% at risk 1, 55% at risk 5
     success_chance = 0.75 - (risk - 1) * 0.05
-    failure_chance = 0.10 + (risk - 1) * 0.05
 
     roll = random.random()
 
@@ -287,8 +291,11 @@ def resolve_expedition(expedition: Expedition) -> list[str]:
                 reward_pool, min(num_items, len(reward_pool))
             )
         expedition.status = "completed"
+        found = ", ".join(expedition.rewards) if expedition.rewards else "nothing"
         logs.append(
-            f"Expedition to {expedition.destination} succeeded! Found: {', '.join(expedition.rewards) if expedition.rewards else 'nothing'}. +{expedition.reward_xp} XP"
+            f"Expedition to {expedition.destination} "
+            f"succeeded! Found: {found}. "
+            f"+{expedition.reward_xp} XP"
         )
     elif roll < success_chance + 0.15:
         # Partial success
@@ -297,7 +304,9 @@ def resolve_expedition(expedition: Expedition) -> list[str]:
         expedition.reward_xp = expedition.reward_xp // 2
         expedition.status = "completed"
         logs.append(
-            f"Expedition to {expedition.destination} partially succeeded. +{expedition.reward_xp} XP"
+            f"Expedition to {expedition.destination} "
+            f"partially succeeded. "
+            f"+{expedition.reward_xp} XP"
         )
     else:
         # Failure
@@ -305,7 +314,9 @@ def resolve_expedition(expedition: Expedition) -> list[str]:
         expedition.reward_xp = expedition.reward_xp // 4
         expedition.status = "failed"
         logs.append(
-            f"Expedition to {expedition.destination} failed. Scouts returned with little. +{expedition.reward_xp} XP"
+            f"Expedition to {expedition.destination} failed. "
+            f"Scouts returned with little. "
+            f"+{expedition.reward_xp} XP"
         )
 
     return logs

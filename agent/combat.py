@@ -43,7 +43,8 @@ def resolve_round(character: Character, combat: Combat) -> list[str]:
                 log.append(f"The {enemy.name} misses you!")
             else:
                 log.append(
-                    f"The {enemy.name} hits you for {enemy_dmg} damage while you stumble!"
+                    f"The {enemy.name} hits you for "
+                    f"{enemy_dmg} damage while you stumble!"
                 )
             combat.turn += 1
             return log
@@ -109,7 +110,9 @@ def try_auto_potion(character: Character, threshold: float = 0.3) -> list[str]:
                 character.hp += heal_amount
                 character.inventory.remove(item)
                 log.append(
-                    f"Auto-used {item.name}! Restored {heal_amount} HP. ({character.hp}/{character.max_hp})"
+                    f"Auto-used {item.name}! "
+                    f"Restored {heal_amount} HP. "
+                    f"({character.hp}/{character.max_hp})"
                 )
                 break
     return log

@@ -56,11 +56,14 @@ def decide_combat_strategy(
     tokenizer, model, character_dict: dict, enemy_dict: dict
 ) -> str:
     hp_pct = character_dict["hp"] / max(1, character_dict["max_hp"])
+    c = character_dict
+    e = enemy_dict
     prompt = (
-        f"You are a RPG adventurer with {character_dict['hp']}/{character_dict['max_hp']} HP, "
-        f"{character_dict['attack']} ATK, {character_dict['defense']} DEF.\n"
-        f"Fighting: {enemy_dict['enemy_name']} with {enemy_dict['enemy_hp']}/{enemy_dict['enemy_max_hp']} HP, "
-        f"{enemy_dict['enemy_attack']} ATK, {enemy_dict['enemy_defense']} DEF.\n"
+        f"You are a RPG adventurer with {c['hp']}/{c['max_hp']} HP, "
+        f"{c['attack']} ATK, {c['defense']} DEF.\n"
+        f"Fighting: {e['enemy_name']} "
+        f"with {e['enemy_hp']}/{e['enemy_max_hp']} HP, "
+        f"{e['enemy_attack']} ATK, {e['enemy_defense']} DEF.\n"
         f"Choose ONE strategy:\n"
         f"1. attack\n"
         f"2. defend\n"
@@ -91,10 +94,13 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
     prompt = (
         f"You are a quest giver in the {zone_name}.\n"
         f"Monsters here: {monster_names}.\n"
-        f"Give a quest. Use EXACTLY this format (one short complete sentence for description, end with a period):\n"
-        f"TARGET: <monster name from the list above>\n"
-        f"COUNT: <number 3-6>\n"
-        f"DESCRIPTION: <one complete sentence, under 80 characters, ending with a period>"
+        "Give a quest. Use EXACTLY this format "
+        "(one short complete sentence for description, "
+        "end with a period):\n"
+        "TARGET: <monster name from the list above>\n"
+        "COUNT: <number 3-6>\n"
+        "DESCRIPTION: <one complete sentence, "
+        "under 80 characters, ending with a period>"
     )
 
     result = _generate(tokenizer, model, prompt, max_tokens=120, temperature=0.8)
@@ -143,7 +149,9 @@ def generate_quest(tokenizer, model, zone_name: str) -> dict:
 def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
     prompt = (
         f"You are exploring the {zone_name}. "
-        f"Describe one brief thing you see or experience (one complete sentence, under 80 characters, ending with a period)."
+        "Describe one brief thing you see or experience "
+        "(one complete sentence, under 80 characters, "
+        "ending with a period)."
     )
     result = _generate(tokenizer, model, prompt)
     if result and len(result) > 5:
@@ -159,7 +167,9 @@ def generate_npc_dialogue(
     prompt = (
         f"You are {npc_name}, a {npc_role} in the {zone}. "
         f"The adventurer visits you (friendship level: {affinity}). "
-        f"Say one brief line in character (one complete sentence, under 80 characters, ending with a period)."
+        "Say one brief line in character "
+        "(one complete sentence, under 80 characters, "
+        "ending with a period)."
     )
     result = _generate(tokenizer, model, prompt)
     if result and len(result) > 5:
@@ -175,7 +185,9 @@ def generate_expedition_event(
     pct = int(progress / max(1, duration) * 100)
     prompt = (
         f"An expedition is exploring {destination} ({pct}% complete). "
-        f"Describe one brief event the scouts encounter (one complete sentence, under 80 characters, ending with a period)."
+        "Describe one brief event the scouts encounter "
+        "(one complete sentence, under 80 characters, "
+        "ending with a period)."
     )
     result = _generate(tokenizer, model, prompt)
     if result and len(result) > 5:
