@@ -27,16 +27,16 @@ struct MainWindowView: View {
       .padding(.vertical, 12)
       .background(Theme.cardBackground)
 
-      if let gs = viewModel.gameState {
+      if let gameState = viewModel.gameState {
         // Two-column layout
         HStack(alignment: .top, spacing: 0) {
           // Left sidebar
           ScrollView {
             VStack(spacing: 12) {
-              CharacterCardView(character: gs.character, zone: gs.zone)
+              CharacterCardView(character: gameState.character, zone: gameState.zone)
               InventorySection(
-                items: gs.character.inventory, weapon: gs.character.weapon,
-                armor: gs.character.armor
+                items: gameState.character.inventory, weapon: gameState.character.weapon,
+                armor: gameState.character.armor
               )
               .padding(Theme.cardPadding)
               .background(
@@ -79,16 +79,16 @@ struct MainWindowView: View {
           // Right content
           ScrollView {
             VStack(spacing: 12) {
-              if let quest = gs.quest {
+              if let quest = gameState.quest {
                 QuestCardView(quest: quest)
               }
-              if let combat = gs.combat {
+              if let combat = gameState.combat {
                 CombatCardView(combat: combat)
               }
-              if let npc = gs.npc_encounter {
+              if let npc = gameState.npcEncounter {
                 NPCCardView(encounter: npc)
               }
-              if let expeditions = gs.expeditions, !expeditions.isEmpty {
+              if let expeditions = gameState.expeditions, !expeditions.isEmpty {
                 ExpeditionPanelView(expeditions: expeditions)
                   .padding(Theme.cardPadding)
                   .background(
@@ -110,8 +110,8 @@ struct MainWindowView: View {
 
         // Bottom: Event log + Quit
         HStack(alignment: .bottom) {
-          if !gs.log.isEmpty {
-            EventLogView(entries: gs.log)
+          if !gameState.log.isEmpty {
+            EventLogView(entries: gameState.log)
           } else {
             Spacer()
           }

@@ -19,25 +19,26 @@ struct CharacterCardView: View {
       }
 
       HStack(spacing: 8) {
-        HPBarView(current: character.hp, max: character.max_hp, height: Theme.hpBarHeight)
-        Text("\(character.hp)/\(character.max_hp)")
+        HPBarView(
+          current: character.hitPoints, max: character.maxHitPoints, height: Theme.hpBarHeight)
+        Text("\(character.hitPoints)/\(character.maxHitPoints)")
           .font(Theme.fontSmall.monospacedDigit())
           .foregroundColor(Theme.bodyText)
           .frame(width: 55, alignment: .trailing)
       }
 
       HStack(spacing: 16) {
-        if let effAtk = character.effective_attack, effAtk != character.attack {
+        if let effAtk = character.effectiveAttack, effAtk != character.attack {
           StatRowView(icon: "bolt.fill", label: "ATK", value: "\(effAtk) (\(character.attack))")
         } else {
           StatRowView(icon: "bolt.fill", label: "ATK", value: "\(character.attack)")
         }
-        if let effDef = character.effective_defense, effDef != character.defense {
+        if let effDef = character.effectiveDefense, effDef != character.defense {
           StatRowView(icon: "shield.fill", label: "DEF", value: "\(effDef) (\(character.defense))")
         } else {
           StatRowView(icon: "shield.fill", label: "DEF", value: "\(character.defense)")
         }
-        StatRowView(icon: "star.fill", label: "XP", value: "\(character.xp)")
+        StatRowView(icon: "star.fill", label: "XP", value: "\(character.experience)")
       }
     }
     .padding(Theme.cardPadding)
@@ -149,12 +150,12 @@ struct QuestCardView: View {
       }
       .frame(height: 6)
 
-      if let reward = quest.reward_item {
+      if let reward = quest.rewardItem {
         HStack(spacing: 4) {
           Text("Reward:")
             .font(Theme.fontTiny)
             .foregroundColor(Theme.mutedText)
-          Text("\(quest.reward_xp) XP")
+          Text("\(quest.rewardXp) XP")
             .font(Theme.fontTiny.bold())
             .foregroundColor(Theme.bodyText)
           Text("+ \(reward)")
@@ -162,7 +163,7 @@ struct QuestCardView: View {
             .foregroundColor(.orange)
         }
       } else {
-        Text("Reward: \(quest.reward_xp) XP")
+        Text("Reward: \(quest.rewardXp) XP")
           .font(Theme.fontTiny)
           .foregroundColor(Theme.mutedText)
       }
@@ -194,7 +195,7 @@ struct CombatCardView: View {
           .font(Theme.fontSmall.bold())
           .foregroundColor(.red)
         Spacer()
-        Text(combat.ai_strategy.uppercased())
+        Text(combat.aiStrategy.uppercased())
           .font(Theme.fontTiny.bold())
           .foregroundColor(Theme.bodyText)
           .padding(.horizontal, 6)
@@ -204,20 +205,20 @@ struct CombatCardView: View {
       }
 
       HStack {
-        Text(combat.enemy_name)
+        Text(combat.enemyName)
           .font(Theme.fontSmall.bold())
           .foregroundColor(Theme.headerText)
         Spacer()
-        Text("\(combat.enemy_hp)/\(combat.enemy_max_hp) HP")
+        Text("\(combat.enemyHp)/\(combat.enemyMaxHp) HP")
           .font(Theme.fontSmall.monospacedDigit())
           .foregroundColor(Theme.bodyText)
       }
 
-      HPBarView(current: combat.enemy_hp, max: combat.enemy_max_hp, barColor: .red, height: 6)
+      HPBarView(current: combat.enemyHp, max: combat.enemyMaxHp, barColor: .red, height: 6)
 
       HStack(spacing: 12) {
-        StatRowView(icon: "bolt.fill", label: "ATK", value: "\(combat.enemy_attack)")
-        StatRowView(icon: "shield.fill", label: "DEF", value: "\(combat.enemy_defense)")
+        StatRowView(icon: "bolt.fill", label: "ATK", value: "\(combat.enemyAttack)")
+        StatRowView(icon: "shield.fill", label: "DEF", value: "\(combat.enemyDefense)")
       }
     }
     .padding(Theme.cardPadding)
@@ -232,7 +233,7 @@ struct CombatCardView: View {
   }
 
   private var strategyColor: Color {
-    switch combat.ai_strategy {
+    switch combat.aiStrategy {
     case "attack": return .red
     case "defend": return .blue
     case "flee": return .yellow
@@ -285,11 +286,11 @@ struct NPCCardView: View {
         Image(systemName: "person.wave.2")
           .font(Theme.fontSmall)
           .foregroundColor(.teal)
-        Text(encounter.npc_name)
+        Text(encounter.npcName)
           .font(Theme.fontSmall.bold())
           .foregroundColor(.teal)
         Spacer()
-        Text(encounter.npc_role.capitalized)
+        Text(encounter.npcRole.capitalized)
           .font(Theme.fontTiny)
           .foregroundColor(Theme.mutedText)
       }
@@ -300,9 +301,9 @@ struct NPCCardView: View {
         .italic()
         .lineLimit(3)
 
-      if encounter.interaction_type == "trade" {
+      if encounter.interactionType == "trade" {
         HStack(spacing: 4) {
-          if let request = encounter.request_item {
+          if let request = encounter.requestItem {
             Text("Trade: \(request)")
               .font(Theme.fontTiny)
               .foregroundColor(Theme.mutedText)
@@ -314,15 +315,15 @@ struct NPCCardView: View {
               .font(Theme.fontTiny)
               .foregroundColor(Theme.mutedText)
           }
-          if let offer = encounter.offer_item {
+          if let offer = encounter.offerItem {
             Text(offer)
               .font(Theme.fontTiny.bold())
               .foregroundColor(.teal)
           }
         }
-      } else if encounter.interaction_type == "buff" {
-        if let buffType = encounter.buff_type, let buffVal = encounter.buff_value,
-          let ticks = encounter.buff_ticks
+      } else if encounter.interactionType == "buff" {
+        if let buffType = encounter.buffType, let buffVal = encounter.buffValue,
+          let ticks = encounter.buffTicks
         {
           Text("Buff: +\(buffVal) \(buffType) for \(ticks) ticks")
             .font(Theme.fontTiny)
@@ -362,7 +363,7 @@ struct ExpeditionPanelView: View {
                 .font(Theme.fontSmall.bold())
                 .foregroundColor(Theme.headerText)
               Spacer()
-              if let risk = exp.risk_level {
+              if let risk = exp.riskLevel {
                 Text("Risk \(risk)")
                   .font(Theme.fontTiny)
                   .foregroundColor(Self.riskColor(risk))
@@ -388,8 +389,8 @@ struct ExpeditionPanelView: View {
                 .font(Theme.fontTiny.monospacedDigit())
                 .foregroundColor(Theme.mutedText)
               Spacer()
-              if let xp = exp.reward_xp {
-                Text("+\(xp) XP")
+              if let reward = exp.rewardXp {
+                Text("+\(reward) XP")
                   .font(Theme.fontTiny)
                   .foregroundColor(.indigo)
               }
@@ -438,8 +439,8 @@ struct ExpeditionPanelView: View {
 
 struct InventorySection: View {
   let items: [InventoryItem]
-  var weapon: String? = nil
-  var armor: String? = nil
+  var weapon: String?
+  var armor: String?
   @State private var isExpanded = true
 
   var body: some View {
@@ -476,7 +477,7 @@ struct InventorySection: View {
                     .font(Theme.fontTiny)
                     .foregroundColor(.blue)
                 }
-                if item.effect_type == "heal", let val = item.effect_value, val > 0 {
+                if item.effectType == "heal", let val = item.effectValue, val > 0 {
                   Text("+\(val) HP")
                     .font(Theme.fontTiny)
                     .foregroundColor(.green)

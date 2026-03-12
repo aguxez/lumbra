@@ -108,8 +108,13 @@ final class LocalServer {
   }
 
   private func sendResponse(connection: NWConnection, status: String, body: String) {
-    let response =
-      "HTTP/1.1 \(status)\r\nContent-Type: application/json\r\nContent-Length: \(body.utf8.count)\r\nConnection: close\r\n\r\n\(body)"
+    let headers = [
+      "HTTP/1.1 \(status)",
+      "Content-Type: application/json",
+      "Content-Length: \(body.utf8.count)",
+      "Connection: close"
+    ].joined(separator: "\r\n")
+    let response = "\(headers)\r\n\r\n\(body)"
     let data = Data(response.utf8)
     connection.send(
       content: data,
