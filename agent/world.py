@@ -51,7 +51,12 @@ def roll_encounter(zone_name: str) -> Enemy | None:
 
 def pick_next_zone(current_zone: str, character_attack: int) -> str:
     current_idx = next((i for i, z in enumerate(ZONES) if z["name"] == current_zone), 0)
-    if character_attack >= (current_idx + 1) * 5 and current_idx < len(ZONES) - 1:
+    current_zone_data = (
+        ZONES[current_idx] if current_idx < len(ZONES) else {"danger": current_idx + 1}
+    )
+    danger = current_zone_data.get("danger", current_idx + 1)
+
+    if character_attack >= danger * 10 and current_idx < len(ZONES) - 1:
         return ZONES[current_idx + 1]["name"]
     return current_zone
 
