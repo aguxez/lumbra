@@ -13,7 +13,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "common",
-      "effect": { "type": "heal", "value": 10 }
+      "effect": {
+        "type": "heal",
+        "value": 10
+      }
     },
     {
       "name": "Health Potion",
@@ -21,7 +24,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "common",
-      "effect": { "type": "heal", "value": 20 }
+      "effect": {
+        "type": "heal",
+        "value": 20
+      }
     },
     {
       "name": "Iron Sword",
@@ -337,7 +343,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "rare",
-      "effect": { "type": "heal", "value": 70 }
+      "effect": {
+        "type": "heal",
+        "value": 70
+      }
     },
     {
       "name": "Bandage",
@@ -345,7 +354,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "common",
-      "effect": { "type": "heal", "value": 15 }
+      "effect": {
+        "type": "heal",
+        "value": 15
+      }
     },
     {
       "name": "Crystal Shards",
@@ -353,7 +365,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "uncommon",
-      "effect": { "type": "heal", "value": 30 }
+      "effect": {
+        "type": "heal",
+        "value": 30
+      }
     },
     {
       "name": "Holy Water",
@@ -361,7 +376,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "rare",
-      "effect": { "type": "heal", "value": 40 }
+      "effect": {
+        "type": "heal",
+        "value": 40
+      }
     },
     {
       "name": "Phoenix Feather",
@@ -369,7 +387,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "epic",
-      "effect": { "type": "heal", "value": 70 }
+      "effect": {
+        "type": "heal",
+        "value": 70
+      }
     },
     {
       "name": "Void Essence",
@@ -377,7 +398,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "legendary",
-      "effect": { "type": "heal", "value": 70 }
+      "effect": {
+        "type": "heal",
+        "value": 70
+      }
     },
     {
       "name": "Ambrosia",
@@ -385,7 +409,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "mythic",
-      "effect": { "type": "heal", "value": 70 }
+      "effect": {
+        "type": "heal",
+        "value": 70
+      }
     },
     {
       "name": "Sunken Kelp",
@@ -393,7 +420,10 @@
       "attack": 0,
       "defense": 0,
       "rarity": "uncommon",
-      "effect": { "type": "heal", "value": 25 }
+      "effect": {
+        "type": "heal",
+        "value": 25
+      }
     }
   ],
   "mobs": [
@@ -733,85 +763,195 @@
       "role": "merchant",
       "zone": "Peaceful Meadow",
       "trades": [
-        { "offer": "Healing Herb", "request": null },
-        { "offer": "Health Potion", "request": "Healing Herb" }
+        {
+          "offer": "Healing Herb",
+          "request": null
+        },
+        {
+          "offer": "Health Potion",
+          "request": "Healing Herb"
+        }
       ],
-      "buffs": [{ "type": "defense", "value": 2, "ticks": 10 }]
+      "buffs": [
+        {
+          "type": "defense",
+          "value": 2,
+          "ticks": 10
+        }
+      ]
     },
     {
       "name": "Meadow Sage Elira",
       "role": "sage",
       "zone": "Peaceful Meadow",
       "trades": [],
-      "buffs": [{ "type": "attack", "value": 2, "ticks": 8 }]
+      "buffs": [
+        {
+          "type": "attack",
+          "value": 2,
+          "ticks": 8
+        }
+      ]
     },
     {
       "name": "Ranger Thalia",
       "role": "wanderer",
       "zone": "Whispering Woods",
-      "trades": [{ "offer": "Forest Amulet", "request": "Iron Sword" }],
-      "buffs": [{ "type": "attack", "value": 3, "ticks": 10 }]
+      "trades": [
+        {
+          "offer": "Forest Amulet",
+          "request": "Iron Sword"
+        }
+      ],
+      "buffs": [
+        {
+          "type": "attack",
+          "value": 3,
+          "ticks": 10
+        }
+      ]
     },
     {
       "name": "Blacksmith Duran",
       "role": "blacksmith",
       "zone": "Whispering Woods",
       "trades": [
-        { "offer": "Iron Sword", "request": "Healing Herb" },
-        { "offer": "Leather Armor", "request": "Healing Herb" }
+        {
+          "offer": "Iron Sword",
+          "request": "Healing Herb"
+        },
+        {
+          "offer": "Leather Armor",
+          "request": "Healing Herb"
+        }
       ],
-      "buffs": [{ "type": "defense", "value": 3, "ticks": 10 }]
+      "buffs": [
+        {
+          "type": "defense",
+          "value": 3,
+          "ticks": 10
+        }
+      ]
     },
     {
       "name": "Hermit Malachar",
       "role": "sage",
       "zone": "Dark Forest",
-      "trades": [{ "offer": "Steel Blade", "request": "Iron Sword" }],
-      "buffs": [{ "type": "attack", "value": 4, "ticks": 12 }]
+      "trades": [
+        {
+          "offer": "Steel Blade",
+          "request": "Iron Sword"
+        }
+      ],
+      "buffs": [
+        {
+          "type": "attack",
+          "value": 4,
+          "ticks": 12
+        }
+      ]
     },
     {
       "name": "Ghost Merchant Vex",
       "role": "merchant",
       "zone": "Dark Forest",
       "trades": [
-        { "offer": "Shadow Cloak", "request": "Leather Armor" },
-        { "offer": "Iron Shield", "request": "Wooden Shield" }
+        {
+          "offer": "Shadow Cloak",
+          "request": "Leather Armor"
+        },
+        {
+          "offer": "Iron Shield",
+          "request": "Wooden Shield"
+        }
       ],
-      "buffs": [{ "type": "defense", "value": 4, "ticks": 8 }]
+      "buffs": [
+        {
+          "type": "defense",
+          "value": 4,
+          "ticks": 8
+        }
+      ]
     },
     {
       "name": "Witch Doctor Zara",
       "role": "sage",
       "zone": "Cursed Swamp",
-      "trades": [{ "offer": "Venom Dagger", "request": "Steel Blade" }],
-      "buffs": [{ "type": "attack", "value": 5, "ticks": 10 }]
+      "trades": [
+        {
+          "offer": "Venom Dagger",
+          "request": "Steel Blade"
+        }
+      ],
+      "buffs": [
+        {
+          "type": "attack",
+          "value": 5,
+          "ticks": 10
+        }
+      ]
     },
     {
       "name": "Swamp Trader Bogden",
       "role": "merchant",
       "zone": "Cursed Swamp",
       "trades": [
-        { "offer": "Swamp Boots", "request": "Leather Armor" },
-        { "offer": "Health Potion", "request": null }
+        {
+          "offer": "Swamp Boots",
+          "request": "Leather Armor"
+        },
+        {
+          "offer": "Health Potion",
+          "request": null
+        }
       ],
-      "buffs": [{ "type": "defense", "value": 5, "ticks": 10 }]
+      "buffs": [
+        {
+          "type": "defense",
+          "value": 5,
+          "ticks": 10
+        }
+      ]
     },
     {
       "name": "Dragonsworn Kael",
       "role": "blacksmith",
       "zone": "Dragon's Peak",
       "trades": [
-        { "offer": "Flame Sword", "request": "Venom Dagger" },
-        { "offer": "Dragon Scale Armor", "request": "Shadow Cloak" }
+        {
+          "offer": "Flame Sword",
+          "request": "Venom Dagger"
+        },
+        {
+          "offer": "Dragon Scale Armor",
+          "request": "Shadow Cloak"
+        }
       ],
-      "buffs": [{ "type": "attack", "value": 6, "ticks": 12 }]
+      "buffs": [
+        {
+          "type": "attack",
+          "value": 6,
+          "ticks": 12
+        }
+      ]
     },
     {
       "name": "Oracle Seraphine",
       "role": "sage",
       "zone": "Dragon's Peak",
-      "trades": [{ "offer": "Dragon's Heart", "request": "Flame Sword" }],
-      "buffs": [{ "type": "defense", "value": 6, "ticks": 12 }]
+      "trades": [
+        {
+          "offer": "Dragon's Heart",
+          "request": "Flame Sword"
+        }
+      ],
+      "buffs": [
+        {
+          "type": "defense",
+          "value": 6,
+          "ticks": 12
+        }
+      ]
     }
   ],
   "expedition_destinations": [
@@ -877,7 +1017,11 @@
     }
   ],
   "zones": [
-    { "name": "Peaceful Meadow", "danger": 1, "monster_types": ["beast"] },
+    {
+      "name": "Peaceful Meadow",
+      "danger": 1,
+      "monster_types": ["beast"]
+    },
     {
       "name": "Whispering Woods",
       "danger": 2,
@@ -948,5 +1092,50 @@
       "danger": 10,
       "monster_types": ["eldritch", "cosmic"]
     }
-  ]
+  ],
+  "base_tiers": [
+    {
+      "name": "Campfire",
+      "tier": 0,
+      "upgrade_cost": null,
+      "storage_slots": 0,
+      "rest_bonus_hp_pct": 0.10,
+      "description": "A modest campfire. Barely shelter."
+    },
+    {
+      "name": "Shelter",
+      "tier": 1,
+      "upgrade_cost": { "xp": 100, "items": ["Healing Herb", "Healing Herb"] },
+      "storage_slots": 5,
+      "rest_bonus_hp_pct": 0.20,
+      "description": "A crude shelter with a storage chest."
+    },
+    {
+      "name": "Cabin",
+      "tier": 2,
+      "upgrade_cost": { "xp": 300, "items": ["Iron Sword", "Leather Armor"] },
+      "storage_slots": 10,
+      "rest_bonus_hp_pct": 0.35,
+      "description": "A sturdy cabin with room for supplies."
+    },
+    {
+      "name": "Fortress",
+      "tier": 3,
+      "upgrade_cost": { "xp": 800, "items": ["Steel Blade", "Shadow Cloak"] },
+      "storage_slots": 20,
+      "rest_bonus_hp_pct": 0.50,
+      "description": "A fortified base. Safe and well-stocked."
+    }
+  ],
+  "day_night": {
+    "cycle_length": 40,
+    "day_start": 0,
+    "night_start": 25,
+    "night_mob_attack_mult": 1.3,
+    "night_mob_hp_mult": 1.2,
+    "night_loot_chance_bonus": 0.10,
+    "fatigue_threshold": 30,
+    "fatigue_debuff_value": 3,
+    "fatigue_debuff_ticks": 8
+  }
 }
