@@ -1228,5 +1228,217 @@
     "fatigue_threshold": 30,
     "fatigue_debuff_value": 3,
     "fatigue_debuff_ticks": 8
-  }
+  },
+  "bosses": [
+    {
+      "name": "Meadow Guardian",
+      "zone": "Peaceful Meadow",
+      "hp": 40,
+      "attack": 8,
+      "defense": 4,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 2},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 5, "defense_bonus": 2}
+      ],
+      "loot": ["Iron Sword", "Health Potion"],
+      "victory_xp": 100
+    },
+    {
+      "name": "Ancient Treant",
+      "zone": "Whispering Woods",
+      "hp": 65,
+      "attack": 12,
+      "defense": 7,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 3},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 6, "defense_bonus": 3}
+      ],
+      "loot": ["Steel Blade", "Forest Amulet"],
+      "victory_xp": 180
+    },
+    {
+      "name": "Lich of the Hollow",
+      "zone": "Dark Forest",
+      "hp": 90,
+      "attack": 16,
+      "defense": 10,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 4},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 8, "defense_bonus": 4}
+      ],
+      "loot": ["Shadow Cloak", "Iron Shield"],
+      "victory_xp": 270
+    },
+    {
+      "name": "Bog Horror",
+      "zone": "Cursed Swamp",
+      "hp": 120,
+      "attack": 20,
+      "defense": 13,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 5},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 10, "defense_bonus": 5}
+      ],
+      "loot": ["Venom Dagger", "Swamp Boots"],
+      "victory_xp": 370
+    },
+    {
+      "name": "Crimson Wyrm",
+      "zone": "Dragon's Peak",
+      "hp": 160,
+      "attack": 25,
+      "defense": 16,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 6},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 12, "defense_bonus": 6}
+      ],
+      "loot": ["Flame Sword", "Dragon Scale Armor"],
+      "victory_xp": 480
+    },
+    {
+      "name": "Prism Golem",
+      "zone": "Crystal Spires",
+      "hp": 200,
+      "attack": 29,
+      "defense": 20,
+      "phases": [
+        {"threshold": 1.0, "strategy": "defend"},
+        {"threshold": 0.66, "strategy": "attack", "attack_bonus": 7},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 14, "defense_bonus": 7}
+      ],
+      "loot": ["Prism Rapier", "Crystal Platemail"],
+      "victory_xp": 600
+    },
+    {
+      "name": "Drowned Admiral",
+      "zone": "Sunken Citadel",
+      "hp": 200,
+      "attack": 30,
+      "defense": 18,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 7},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 14, "defense_bonus": 7}
+      ],
+      "loot": ["Coral Hauberk", "Shell Buckler"],
+      "victory_xp": 600
+    },
+    {
+      "name": "Sandstorm Titan",
+      "zone": "Sand-Swept Dunes",
+      "hp": 250,
+      "attack": 34,
+      "defense": 23,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 8},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 16, "defense_bonus": 8}
+      ],
+      "loot": ["Scimitar of Sands", "Nomadic Silk"],
+      "victory_xp": 730
+    },
+    {
+      "name": "Iron Colossus",
+      "zone": "Clockwork City",
+      "hp": 250,
+      "attack": 35,
+      "defense": 25,
+      "phases": [
+        {"threshold": 1.0, "strategy": "defend"},
+        {"threshold": 0.66, "strategy": "attack", "attack_bonus": 8},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 16, "defense_bonus": 10}
+      ],
+      "loot": ["Gear-Tooth Saw", "Golden Cog"],
+      "victory_xp": 730
+    },
+    {
+      "name": "Glacier Behemoth",
+      "zone": "Frostbite Tundra",
+      "hp": 310,
+      "attack": 40,
+      "defense": 28,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 10},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 20, "defense_bonus": 10}
+      ],
+      "loot": ["Frost Axe", "Fur-Lined Tunic"],
+      "victory_xp": 870
+    },
+    {
+      "name": "Shade Sovereign",
+      "zone": "Shadow Realm",
+      "hp": 310,
+      "attack": 42,
+      "defense": 26,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 10},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 20, "defense_bonus": 10}
+      ],
+      "loot": ["Shadow Blade", "Umbral Vestment"],
+      "victory_xp": 870
+    },
+    {
+      "name": "Pit Fiend Lord",
+      "zone": "Abyssal Rift",
+      "hp": 380,
+      "attack": 48,
+      "defense": 32,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 12},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 24, "defense_bonus": 12}
+      ],
+      "loot": ["Abyssal Dagger", "Bone Aegis"],
+      "victory_xp": 1020
+    },
+    {
+      "name": "Molten Archsmith",
+      "zone": "Eternal Forge",
+      "hp": 380,
+      "attack": 46,
+      "defense": 35,
+      "phases": [
+        {"threshold": 1.0, "strategy": "defend"},
+        {"threshold": 0.66, "strategy": "attack", "attack_bonus": 12},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 24, "defense_bonus": 12}
+      ],
+      "loot": ["Molten Hammer", "Forge-Fire Plate"],
+      "victory_xp": 1020
+    },
+    {
+      "name": "Seraph of Ruin",
+      "zone": "Celestial Sanctum",
+      "hp": 460,
+      "attack": 55,
+      "defense": 38,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 14},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 28, "defense_bonus": 14}
+      ],
+      "loot": ["Celestial Bow", "Angelic Robes"],
+      "victory_xp": 1200
+    },
+    {
+      "name": "The Null Entity",
+      "zone": "The Void Core",
+      "hp": 500,
+      "attack": 60,
+      "defense": 40,
+      "phases": [
+        {"threshold": 1.0, "strategy": "attack"},
+        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 15},
+        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 30, "defense_bonus": 15}
+      ],
+      "loot": ["Void Reaver", "Void Shroud"],
+      "victory_xp": 1500
+    }
+  ]
 }

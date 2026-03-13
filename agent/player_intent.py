@@ -76,8 +76,9 @@ def _fallback_combat_start(state, **kwargs) -> tuple[str, str]:
     hp_pct = char.hp / max(1, char.max_hp)
     enemy = kwargs.get("enemy")
     flee_threshold = INTENT_CONFIG.get("power_ratio_flee_threshold", 0.5)
+    is_boss = enemy and enemy.is_boss
 
-    if enemy:
+    if enemy and not is_boss:
         power_ratio = char.effective_attack / max(1, enemy.attack)
         if power_ratio < flee_threshold and hp_pct < 0.5:
             return ("flee", "This foe is too dangerous right now.")
@@ -87,7 +88,12 @@ def _fallback_combat_start(state, **kwargs) -> tuple[str, str]:
     has_potions = any(i.effect_type == "heal" for i in char.inventory)
 
     if hp_pct < 0.3 and not has_potions:
+        if is_boss:
+            return ("defend", "No potions left, must hold the line against the boss!")
         return ("flee", "Too weak and no potions left.")
+
+    if is_boss:
+        return ("attack", "The boss must fall!")
 
     return ("attack", "Ready for battle!")
 
@@ -97,9 +103,15 @@ def _fallback_low_hp(state, **kwargs) -> tuple[str, str]:
     hp_pct = char.hp / max(1, char.max_hp)
     enemy = kwargs.get("enemy")
     has_potions = any(i.effect_type == "heal" for i in char.inventory)
+    is_boss = enemy and enemy.is_boss
 
     if enemy and enemy.hp < enemy.max_hp * 0.2:
         return ("press_on", "The enemy is almost defeated!")
+
+    if is_boss:
+        if has_potions:
+            return ("defend", "Hold the line against the boss and use potions.")
+        return ("press_on", "No retreat from the boss! Fight to the end!")
 
     if hp_pct < 0.15 and not has_potions:
         return ("flee", "Must retreat before it's too late!")

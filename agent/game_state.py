@@ -3,7 +3,7 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 
-from config_loader import DAY_NIGHT, get_base_tier, get_npcs_in_zone
+from config_loader import BOSSES, DAY_NIGHT, get_base_tier, get_npcs_in_zone
 
 SAVE_PATH = os.path.join(os.path.dirname(__file__), "savegame.json")
 
@@ -190,18 +190,26 @@ class Enemy:
     max_hp: int
     attack: int
     defense: int
+    is_boss: bool = False
+    boss_phase: int = 0
+    boss_phases: list[dict] = field(default_factory=list)
 
     def is_alive(self) -> bool:
         return self.hp > 0
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "enemy_name": self.name,
             "enemy_hp": self.hp,
             "enemy_max_hp": self.max_hp,
             "enemy_attack": self.attack,
             "enemy_defense": self.defense,
         }
+        if self.is_boss:
+            d["is_boss"] = True
+            d["boss_phase"] = self.boss_phase
+            d["boss_phase_count"] = len(self.boss_phases)
+        return d
 
 
 @dataclass
@@ -265,6 +273,8 @@ class GameState:
     location: str = "exploring"
     ticks_exploring: int = 0
     was_night: bool = False
+    bosses_defeated: dict[str, bool] = field(default_factory=dict)
+    pending_boss: bool = False
     _current_intent: dict | None = field(default=None, repr=False)
 
     @property
@@ -314,6 +324,8 @@ class GameState:
                 for npc in get_npcs_in_zone(self.zone, self.npc_world)
             ],
             "location": self.location,
+            "bosses_defeated": self.bosses_defeated,
+            "total_bosses": len(BOSSES),
             "is_night": self.is_night,
             "cycle_position": self.cycle_position,
             "cycle_length": self.cycle_length,
@@ -371,6 +383,8 @@ class GameState:
             "location": self.location,
             "ticks_exploring": self.ticks_exploring,
             "was_night": self.was_night,
+            "bosses_defeated": self.bosses_defeated,
+            "pending_boss": self.pending_boss,
         }
         tmp = path + ".tmp"
         with open(tmp, "w") as f:
@@ -441,7 +455,9 @@ class GameState:
         combat = None
         if data.get("combat"):
             enemy_data = data["combat"]["enemy"]
-            enemy = Enemy(**enemy_data)
+            # Remove boss_phases from enemy_data if present (not a field for **kwargs)
+            boss_phases = enemy_data.pop("boss_phases", [])
+            enemy = Enemy(**enemy_data, boss_phases=boss_phases)
             combat = Combat(
                 enemy=enemy,
                 turn=data["combat"].get("turn", 1),
@@ -489,5 +505,7 @@ class GameState:
             location=data.get("location", "exploring"),
             ticks_exploring=data.get("ticks_exploring", 0),
             was_night=data.get("was_night", False),
+            bosses_defeated=data.get("bosses_defeated", {}),
+            pending_boss=data.get("pending_boss", False),
         )
         return state
