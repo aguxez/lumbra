@@ -1,5 +1,47 @@
 import SwiftUI
 
+// MARK: - Shared Helpers
+
+private func rarityColor(_ rarity: String) -> Color {
+  switch rarity {
+  case "uncommon": return .green
+  case "rare": return .blue
+  case "legendary": return .purple
+  default: return Theme.mutedText
+  }
+}
+
+struct ItemRowView: View {
+  let item: InventoryItem
+
+  var body: some View {
+    HStack(spacing: 4) {
+      Text(item.name)
+        .font(Theme.fontSmall)
+        .foregroundColor(Theme.bodyText)
+      Spacer()
+      if let atk = item.attack, atk > 0 {
+        Text("+\(atk) ATK")
+          .font(Theme.fontTiny)
+          .foregroundColor(.orange)
+      }
+      if let def = item.defense, def > 0 {
+        Text("+\(def) DEF")
+          .font(Theme.fontTiny)
+          .foregroundColor(.blue)
+      }
+      if item.effectType == "heal", let val = item.effectValue, val > 0 {
+        Text("+\(val) HP")
+          .font(Theme.fontTiny)
+          .foregroundColor(.green)
+      }
+      Text(item.rarity)
+        .font(Theme.fontTiny)
+        .foregroundColor(rarityColor(item.rarity))
+    }
+  }
+}
+
 // MARK: - Character Card (extracted from LumbraPanel)
 
 struct CharacterCardView: View {
@@ -497,83 +539,6 @@ struct EquipmentSection: View {
           .foregroundColor(Theme.mutedText.opacity(0.5))
         Spacer()
       }
-    }
-  }
-
-  private func rarityColor(_ rarity: String) -> Color {
-    switch rarity {
-    case "uncommon": return .green
-    case "rare": return .blue
-    case "legendary": return .purple
-    default: return Theme.mutedText
-    }
-  }
-}
-
-// MARK: - Inventory Section
-
-struct InventorySection: View {
-  let items: [InventoryItem]
-  @State private var isExpanded = true
-
-  var body: some View {
-    DisclosureGroup(isExpanded: $isExpanded) {
-      if items.isEmpty {
-        Text("Empty")
-          .font(Theme.fontSmall)
-          .foregroundColor(Theme.mutedText)
-      } else {
-        ScrollView {
-          VStack(alignment: .leading, spacing: 4) {
-            ForEach(items) { item in
-              HStack(spacing: 4) {
-                Text(item.name)
-                  .font(Theme.fontSmall)
-                  .foregroundColor(Theme.bodyText)
-                Spacer()
-                if let atk = item.attack, atk > 0 {
-                  Text("+\(atk) ATK")
-                    .font(Theme.fontTiny)
-                    .foregroundColor(.orange)
-                }
-                if let def = item.defense, def > 0 {
-                  Text("+\(def) DEF")
-                    .font(Theme.fontTiny)
-                    .foregroundColor(.blue)
-                }
-                if item.effectType == "heal", let val = item.effectValue, val > 0 {
-                  Text("+\(val) HP")
-                    .font(Theme.fontTiny)
-                    .foregroundColor(.green)
-                }
-                Text(item.rarity)
-                  .font(Theme.fontTiny)
-                  .foregroundColor(rarityColor(item.rarity))
-              }
-            }
-          }
-        }
-        .frame(maxHeight: 150)
-      }
-    } label: {
-      HStack(spacing: 4) {
-        Image(systemName: "bag")
-          .font(Theme.fontSmall)
-          .foregroundColor(Theme.accent)
-        Text("Inventory (\(items.count))")
-          .font(Theme.fontSmall.bold())
-          .foregroundColor(Theme.accent)
-      }
-    }
-    .tint(Theme.bodyText)
-  }
-
-  private func rarityColor(_ rarity: String) -> Color {
-    switch rarity {
-    case "uncommon": return .green
-    case "rare": return .blue
-    case "legendary": return .purple
-    default: return Theme.mutedText
     }
   }
 }

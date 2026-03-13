@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 
 from config_loader import (
+    DAY_NIGHT,
     EXPEDITION_DESTINATIONS,
     ZONES,
     get_expedition_destination,
@@ -33,17 +34,22 @@ EXPLORATION_EVENTS = [
 ]
 
 
-def roll_encounter(zone_name: str) -> Enemy | None:
+def roll_encounter(zone_name: str, is_night: bool = False) -> Enemy | None:
     if random.random() < 0.6:
         monsters = get_mobs_for_zone(zone_name)
         if not monsters:
             return None
         m = random.choice(monsters)
+        hp = m["hp"]
+        attack = m["attack"]
+        if is_night:
+            attack = int(attack * DAY_NIGHT.get("night_mob_attack_mult", 1.0))
+            hp = int(hp * DAY_NIGHT.get("night_mob_hp_mult", 1.0))
         return Enemy(
             name=m["name"],
-            hp=m["hp"],
-            max_hp=m["hp"],
-            attack=m["attack"],
+            hp=hp,
+            max_hp=hp,
+            attack=attack,
             defense=m["defense"],
         )
     return None
@@ -89,8 +95,11 @@ def get_exploration_event() -> str:
     return random.choice(EXPLORATION_EVENTS)
 
 
-def roll_loot(mob_name: str) -> dict | None:
-    if random.random() < 0.2:
+def roll_loot(mob_name: str, is_night: bool = False) -> dict | None:
+    base_chance = 0.2
+    if is_night:
+        base_chance += DAY_NIGHT.get("night_loot_chance_bonus", 0.0)
+    if random.random() < base_chance:
         loot_items = get_loot_for_mob(mob_name)
         if loot_items:
             return random.choice(loot_items)
