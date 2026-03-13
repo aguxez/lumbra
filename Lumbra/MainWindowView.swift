@@ -34,6 +34,33 @@ struct MainWindowView: View {
           ScrollView {
             VStack(spacing: 12) {
               CharacterCardView(character: gameState.character, zone: gameState.zone)
+
+              // Day/Night + Location indicators
+              HStack(spacing: 8) {
+                if let isNight = gameState.isNight,
+                  let pos = gameState.cyclePosition,
+                  let len = gameState.cycleLength
+                {
+                  DayNightIndicator(
+                    isNight: isNight, cyclePosition: pos,
+                    cycleLength: len, nightStart: gameState.nightStart ?? 25
+                  )
+                }
+                Spacer()
+                if let location = gameState.location {
+                  let isAtBase = location == "at_base"
+                  Text(isAtBase ? "At Base" : "Exploring")
+                    .font(Theme.fontTiny.bold())
+                    .foregroundColor(isAtBase ? .brown : .green)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                      (isAtBase ? Color.brown : Color.green).opacity(0.15)
+                    )
+                    .cornerRadius(4)
+                }
+              }
+
               EquipmentSection(equipment: gameState.character.equipment)
                 .padding(Theme.cardPadding)
                 .background(
@@ -54,6 +81,23 @@ struct MainWindowView: View {
                         .strokeBorder(Theme.cardBorder, lineWidth: 1)
                     )
                 )
+
+              // Base card + Storage
+              if let base = gameState.base {
+                BaseCardView(base: base)
+                if let slots = base.storageSlots, slots > 0 {
+                  StorageSection(items: base.storage, maxSlots: slots)
+                    .padding(Theme.cardPadding)
+                    .background(
+                      RoundedRectangle(cornerRadius: Theme.cardRadius)
+                        .fill(Theme.cardBackground)
+                        .overlay(
+                          RoundedRectangle(cornerRadius: Theme.cardRadius)
+                            .strokeBorder(Theme.cardBorder, lineWidth: 1)
+                        )
+                    )
+                }
+              }
             }
             .padding(12)
           }

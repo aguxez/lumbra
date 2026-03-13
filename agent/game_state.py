@@ -3,6 +3,8 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 
+from config_loader import DAY_NIGHT, get_base_tier
+
 SAVE_PATH = os.path.join(os.path.dirname(__file__), "savegame.json")
 
 
@@ -135,7 +137,7 @@ class Character:
         if self.equipped_weapon:
             bonus = self.equipped_weapon.attack
         buff_bonus = sum(b.value for b in self.active_buffs if b.buff_type == "attack")
-        return self.attack + bonus + buff_bonus
+        return max(0, self.attack + bonus + buff_bonus)
 
     @property
     def effective_defense(self) -> int:
@@ -145,7 +147,7 @@ class Character:
         if self.equipped_accessory:
             bonus += self.equipped_accessory.defense
         buff_bonus = sum(b.value for b in self.active_buffs if b.buff_type == "defense")
-        return self.defense + bonus + buff_bonus
+        return max(0, self.defense + bonus + buff_bonus)
 
     def to_dict(self) -> dict:
         return {
@@ -241,6 +243,13 @@ class Combat:
 
 
 @dataclass
+class Base:
+    tier: int = 0
+    name: str = "Campfire"
+    storage: list[InventoryItem] = field(default_factory=list)
+
+
+@dataclass
 class GameState:
     tick: int = 0
     character: Character = field(default_factory=Character)
@@ -251,8 +260,30 @@ class GameState:
     npc_relationships: dict = field(default_factory=dict)
     expeditions: list[Expedition] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
+    base: Base = field(default_factory=Base)
+    location: str = "exploring"
+    ticks_exploring: int = 0
+    was_night: bool = False
+
+    @property
+    def cycle_length(self) -> int:
+        return max(1, DAY_NIGHT.get("cycle_length", 40))
+
+    @property
+    def night_start(self) -> int:
+        return DAY_NIGHT.get("night_start", 25)
+
+    @property
+    def cycle_position(self) -> int:
+        return self.tick % self.cycle_length
+
+    @property
+    def is_night(self) -> bool:
+        return self.cycle_position >= self.night_start
 
     def to_dict(self) -> dict:
+        base_tier_data = get_base_tier(self.base.tier)
+
         return {
             "tick": self.tick,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -267,6 +298,20 @@ class GameState:
                 e.to_dict() for e in self.expeditions if e.status == "active"
             ],
             "log": self.log[-10:],
+            "base": {
+                "tier": self.base.tier,
+                "name": self.base.name,
+                "storage": [_item_to_dict(i) for i in self.base.storage],
+                "storage_slots": base_tier_data["storage_slots"]
+                if base_tier_data
+                else 0,
+                "description": base_tier_data["description"] if base_tier_data else "",
+            },
+            "location": self.location,
+            "is_night": self.is_night,
+            "cycle_position": self.cycle_position,
+            "cycle_length": self.cycle_length,
+            "night_start": self.night_start,
         }
 
     def add_log(self, message: str):
@@ -310,6 +355,14 @@ class GameState:
             "npc_relationships": self.npc_relationships,
             "expeditions": [asdict(e) for e in self.expeditions],
             "log": self.log[-20:],
+            "base": {
+                "tier": self.base.tier,
+                "name": self.base.name,
+                "storage": [asdict(i) for i in self.base.storage],
+            },
+            "location": self.location,
+            "ticks_exploring": self.ticks_exploring,
+            "was_night": self.was_night,
         }
         tmp = path + ".tmp"
         with open(tmp, "w") as f:
@@ -402,6 +455,18 @@ class GameState:
             for e in data.get("expeditions", [])
         ]
 
+        # Load base state (backwards compatible — old saves get defaults)
+        base_data = data.get("base", {})
+        base = Base(
+            tier=base_data.get("tier", 0),
+            name=base_data.get("name", "Campfire"),
+            storage=[
+                item
+                for i in base_data.get("storage", [])
+                if i and (item := _load_item(i))
+            ],
+        )
+
         state = cls(
             tick=data.get("tick", 0),
             character=character,
@@ -411,5 +476,9 @@ class GameState:
             npc_relationships=data.get("npc_relationships", {}),
             expeditions=expeditions,
             log=data.get("log", []),
+            base=base,
+            location=data.get("location", "exploring"),
+            ticks_exploring=data.get("ticks_exploring", 0),
+            was_night=data.get("was_night", False),
         )
         return state

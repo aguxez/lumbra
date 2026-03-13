@@ -1,5 +1,18 @@
 import Foundation
 
+struct BaseState: Codable {
+  let tier: Int
+  let name: String
+  let storage: [InventoryItem]
+  let storageSlots: Int?
+  let description: String?
+
+  enum CodingKeys: String, CodingKey {
+    case tier, name, storage, description
+    case storageSlots = "storage_slots"
+  }
+}
+
 struct GameStateResponse: Codable {
   let tick: Int
   let timestamp: String
@@ -10,10 +23,21 @@ struct GameStateResponse: Codable {
   let npcEncounter: NPCEncounterState?
   let expeditions: [ExpeditionState]?
   let log: [String]
+  let base: BaseState?
+  let location: String?
+  let isNight: Bool?
+  let cyclePosition: Int?
+  let cycleLength: Int?
+  let nightStart: Int?
 
   enum CodingKeys: String, CodingKey {
     case tick, timestamp, character, zone, quest, combat, expeditions, log
+    case base, location
     case npcEncounter = "npc_encounter"
+    case isNight = "is_night"
+    case cyclePosition = "cycle_position"
+    case cycleLength = "cycle_length"
+    case nightStart = "night_start"
   }
 }
 
@@ -47,8 +71,7 @@ struct CharacterState: Codable {
   }
 }
 
-struct InventoryItem: Codable, Identifiable {
-  var id: String { name }
+struct InventoryItem: Codable {
   let name: String
   let rarity: String
   let itemType: String?

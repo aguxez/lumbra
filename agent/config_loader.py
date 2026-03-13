@@ -7,7 +7,8 @@ _CONFIG_PATH = os.path.join(os.path.dirname(__file__), "game_config.json")
 
 try:
     with open(_CONFIG_PATH) as _f:
-        _CONFIG = json.load(_f)
+        _loaded = json.load(_f)
+        _CONFIG: dict = _loaded if isinstance(_loaded, dict) else {}
 except (FileNotFoundError, json.JSONDecodeError) as e:
     print(f"[config_loader] Failed to load game_config.json: {e}, using defaults")
     _CONFIG = {"items": [], "mobs": [], "zones": []}
@@ -67,6 +68,17 @@ def get_zone(name: str) -> dict | None:
 
 NPCS: list[dict] = _CONFIG.get("npcs", [])
 EXPEDITION_DESTINATIONS: list[dict] = _CONFIG.get("expedition_destinations", [])
+BASE_TIERS: list[dict] = _CONFIG.get("base_tiers", [])
+_BASE_TIERS_BY_TIER: dict[int, dict] = {t["tier"]: t for t in BASE_TIERS}
+DAY_NIGHT: dict = _CONFIG.get("day_night", {})
+
+
+def get_base_tier(tier: int) -> dict | None:
+    return _BASE_TIERS_BY_TIER.get(tier)
+
+
+def get_next_base_tier(current_tier: int) -> dict | None:
+    return _BASE_TIERS_BY_TIER.get(current_tier + 1)
 
 
 def get_npcs_for_zone(zone_name: str) -> list[dict]:
