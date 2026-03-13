@@ -10,9 +10,10 @@ from config_loader import (
     get_item,
     get_loot_for_mob,
     get_mobs_for_zone,
-    get_npcs_for_zone,
+    get_npcs_in_zone,
 )
 from game_state import ActiveBuff, Enemy, Expedition, InventoryItem, NPCEncounter
+from npc_autonomy import get_available_trades, scale_buff
 
 QUEST_TEMPLATES = [
     {"desc": "Kill {n} {monster}s", "type": "kill"},
@@ -144,7 +145,7 @@ def roll_npc_encounter(state) -> NPCEncounter | None:
     if random.random() > 0.30:
         return None
 
-    npcs = get_npcs_for_zone(state.zone)
+    npcs = get_npcs_in_zone(state.zone, state.npc_world)
     if not npcs:
         return None
 
@@ -154,9 +155,10 @@ def roll_npc_encounter(state) -> NPCEncounter | None:
 
     dialogue = _get_npc_dialogue(npc)
 
-    # Pick interaction based on affinity
-    if affinity >= 30 and npc.get("trades"):
-        trade = random.choice(npc["trades"])
+    # Pick interaction based on affinity — use dynamic trade/buff filtering
+    available_trades = get_available_trades(npc, state.zone, affinity, state.is_night)
+    if affinity >= 30 and available_trades:
+        trade = random.choice(available_trades)
         interaction_type = "trade"
         encounter = NPCEncounter(
             npc_name=npc_name,
@@ -168,6 +170,7 @@ def roll_npc_encounter(state) -> NPCEncounter | None:
         )
     elif affinity >= 15 and npc.get("buffs"):
         buff = random.choice(npc["buffs"])
+        scaled_value = scale_buff(buff, affinity)
         interaction_type = "buff"
         encounter = NPCEncounter(
             npc_name=npc_name,
@@ -175,7 +178,7 @@ def roll_npc_encounter(state) -> NPCEncounter | None:
             dialogue=dialogue,
             interaction_type=interaction_type,
             buff_type=buff["type"],
-            buff_value=buff["value"],
+            buff_value=scaled_value,
             buff_ticks=buff["ticks"],
         )
     else:

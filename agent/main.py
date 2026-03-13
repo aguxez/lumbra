@@ -21,6 +21,7 @@ from game_state import (
     InventoryItem,
     Quest,
 )
+from npc_autonomy import tick_npc_movement
 from player_intent import generate_intent
 from world import (
     create_expedition,
@@ -668,6 +669,7 @@ def main():
         # tick_day_night updates was_night and fatigue state;
         # tick_location reads is_night to decide exploring↔at_base transitions.
         tick_day_night(state)
+        tick_npc_movement(state)
         tick_location(state)
 
         if state.location == "at_base":

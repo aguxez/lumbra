@@ -86,6 +86,16 @@ def get_npcs_for_zone(zone_name: str) -> list[dict]:
     return [n for n in NPCS if n["zone"] == zone_name]
 
 
+def get_npcs_in_zone(zone_name: str, npc_world: dict) -> list[dict]:
+    """Get NPCs currently in a zone, using runtime state with config fallback."""
+    result = []
+    for npc in NPCS:
+        current = npc_world.get(npc["name"], {}).get("current_zone", npc["zone"])
+        if current == zone_name:
+            result.append(npc)
+    return result
+
+
 def get_expedition_destination(risk_max: int) -> dict | None:
     import random as _rng
 
