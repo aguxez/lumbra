@@ -254,15 +254,29 @@ struct QuestCardView: View {
 struct CombatCardView: View {
   let combat: CombatState
 
+  private var isBoss: Bool { combat.isBoss == true }
+
+  private var cardFillColor: Color {
+    isBoss ? Color.purple.opacity(0.10) : Color.red.opacity(0.08)
+  }
+
+  private var cardBorderColor: Color {
+    isBoss ? Color.purple.opacity(0.4) : Color.red.opacity(0.25)
+  }
+
+  private var headerColor: Color {
+    isBoss ? .purple : .red
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
       HStack {
-        Image(systemName: "flame")
+        Image(systemName: isBoss ? "crown.fill" : "flame")
           .font(Theme.fontSmall)
-          .foregroundColor(.red)
-        Text("Combat — Turn \(combat.turn)")
+          .foregroundColor(headerColor)
+        Text(isBoss ? "Boss Fight — Turn \(combat.turn)" : "Combat — Turn \(combat.turn)")
           .font(Theme.fontSmall.bold())
-          .foregroundColor(.red)
+          .foregroundColor(headerColor)
         Spacer()
         Text(combat.aiStrategy.uppercased())
           .font(Theme.fontTiny.bold())
@@ -274,7 +288,12 @@ struct CombatCardView: View {
       }
 
       HStack {
-        Text(combat.enemyName)
+        if isBoss {
+          Image(systemName: "crown.fill")
+            .font(Theme.fontTiny)
+            .foregroundColor(.yellow)
+        }
+        Text(isBoss ? "Boss: \(combat.enemyName)" : combat.enemyName)
           .font(Theme.fontSmall.bold())
           .foregroundColor(Theme.headerText)
         Spacer()
@@ -283,7 +302,13 @@ struct CombatCardView: View {
           .foregroundColor(Theme.bodyText)
       }
 
-      HPBarView(current: combat.enemyHp, max: combat.enemyMaxHp, barColor: .red, height: 6)
+      if isBoss, let phase = combat.bossPhase {
+        Text("Phase \(phase + 1)/\(combat.bossPhaseCount ?? 3)")
+          .font(Theme.fontTiny.bold())
+          .foregroundColor(.purple)
+      }
+
+      HPBarView(current: combat.enemyHp, max: combat.enemyMaxHp, barColor: isBoss ? .purple : .red, height: 6)
 
       HStack(spacing: 12) {
         StatRowView(icon: "bolt.fill", label: "ATK", value: "\(combat.enemyAttack)")
@@ -293,10 +318,10 @@ struct CombatCardView: View {
     .padding(Theme.cardPadding)
     .background(
       RoundedRectangle(cornerRadius: Theme.cardRadius)
-        .fill(Color.red.opacity(0.08))
+        .fill(cardFillColor)
         .overlay(
           RoundedRectangle(cornerRadius: Theme.cardRadius)
-            .strokeBorder(Color.red.opacity(0.25), lineWidth: 1)
+            .strokeBorder(cardBorderColor, lineWidth: isBoss ? 2 : 1)
         )
     )
   }

@@ -52,6 +52,20 @@ def _generate(
         return None
 
 
+def _generate_text(
+    tokenizer, model, prompt: str, max_tokens: int = 80, temperature: float = 0.9
+) -> str | None:
+    """Generate text and truncate to a complete sentence. Returns None on failure."""
+    result = _generate(
+        tokenizer, model, prompt, max_tokens=max_tokens, temperature=temperature
+    )
+    if result and len(result) > 5:
+        truncated = _truncate_sentence(result)
+        if truncated:
+            return truncated
+    return None
+
+
 def decide_combat_strategy(
     tokenizer, model, character_dict: dict, enemy_dict: dict
 ) -> str:
@@ -153,11 +167,9 @@ def generate_exploration_event(tokenizer, model, zone_name: str) -> str:
         "(one complete sentence, under 80 characters, "
         "ending with a period)."
     )
-    result = _generate(tokenizer, model, prompt)
-    if result and len(result) > 5:
-        truncated = _truncate_sentence(result)
-        if truncated:
-            return truncated
+    text = _generate_text(tokenizer, model, prompt)
+    if text:
+        return text
     return random.choice(EXPLORATION_EVENTS)
 
 
@@ -171,12 +183,7 @@ def generate_npc_dialogue(
         "(one complete sentence, under 80 characters, "
         "ending with a period)."
     )
-    result = _generate(tokenizer, model, prompt)
-    if result and len(result) > 5:
-        truncated = _truncate_sentence(result)
-        if truncated:
-            return truncated
-    return None
+    return _generate_text(tokenizer, model, prompt)
 
 
 def decide_intent(
@@ -207,6 +214,50 @@ def decide_intent(
     return None
 
 
+def generate_boss_taunt(
+    tokenizer, model, boss_name: str, zone: str, phase: int
+) -> str | None:
+    """Generate a boss taunt line when boss spawns or changes phase."""
+    phase_desc = {
+        0: "confident and threatening",
+        1: "wounded but furious",
+        2: "desperate and enraged",
+    }
+    mood = phase_desc.get(phase, "menacing")
+    prompt = (
+        f"You are {boss_name}, a powerful boss monster guarding the {zone}. "
+        f"You are {mood}. "
+        "Say one brief intimidating line in character "
+        "(one complete sentence, under 80 characters, ending with a period)."
+    )
+    return _generate_text(tokenizer, model, prompt, max_tokens=60, temperature=0.9)
+
+
+def generate_boss_victory_text(
+    tokenizer, model, boss_name: str, zone: str, next_zone: str
+) -> str | None:
+    """Generate a celebration message when the boss is defeated."""
+    prompt = (
+        f"The adventurer has defeated {boss_name} in the {zone} "
+        f"and can now enter {next_zone}. "
+        "Describe this victory in one dramatic sentence "
+        "(under 80 characters, ending with a period)."
+    )
+    return _generate_text(tokenizer, model, prompt, max_tokens=60, temperature=0.8)
+
+
+def generate_boss_defeat_text(
+    tokenizer, model, boss_name: str, zone: str
+) -> str | None:
+    """Generate a defeat message when the player dies to a boss."""
+    prompt = (
+        f"The adventurer was defeated by {boss_name} in the {zone} and must retreat. "
+        "Describe this defeat in one brief sentence "
+        "(under 80 characters, ending with a period)."
+    )
+    return _generate_text(tokenizer, model, prompt, max_tokens=60, temperature=0.8)
+
+
 def generate_expedition_event(
     tokenizer, model, destination: str, progress: int, duration: int
 ) -> str | None:
@@ -217,9 +268,4 @@ def generate_expedition_event(
         "(one complete sentence, under 80 characters, "
         "ending with a period)."
     )
-    result = _generate(tokenizer, model, prompt)
-    if result and len(result) > 5:
-        truncated = _truncate_sentence(result)
-        if truncated:
-            return truncated
-    return None
+    return _generate_text(tokenizer, model, prompt)

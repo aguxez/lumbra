@@ -59,6 +59,21 @@ struct MainWindowView: View {
                 )
               }
 
+              // Boss tracker
+              if let bossesDefeated = gameState.bossesDefeated {
+                let slain = bossesDefeated.values.filter { $0 }.count
+                HStack(spacing: 4) {
+                  Image(systemName: "crown.fill")
+                    .font(Theme.fontTiny)
+                    .foregroundColor(.purple)
+                  Text("Bosses Slain: \(slain)/\(gameState.totalBosses ?? 15)")
+                    .font(Theme.fontTiny.bold())
+                    .foregroundColor(.purple)
+                  Spacer()
+                }
+                .padding(.horizontal, 4)
+              }
+
               // Day/Night + Location indicators
               HStack(spacing: 8) {
                 if let isNight = gameState.isNight,

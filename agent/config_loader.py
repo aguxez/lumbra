@@ -66,6 +66,14 @@ def get_zone(name: str) -> dict | None:
     return next((z for z in ZONES if z["name"] == name), None)
 
 
+BOSSES: list[dict] = _CONFIG.get("bosses", [])
+for _boss in BOSSES:
+    _boss["phases"] = sorted(
+        _boss.get("phases", []), key=lambda p: p["threshold"], reverse=True
+    )
+_BOSSES_BY_ZONE: dict[str, dict] = {b["zone"]: b for b in BOSSES}
+_BOSSES_BY_NAME: dict[str, dict] = {b["name"]: b for b in BOSSES}
+
 NPCS: list[dict] = _CONFIG.get("npcs", [])
 EXPEDITION_DESTINATIONS: list[dict] = _CONFIG.get("expedition_destinations", [])
 BASE_TIERS: list[dict] = _CONFIG.get("base_tiers", [])
@@ -94,6 +102,19 @@ def get_npcs_in_zone(zone_name: str, npc_world: dict) -> list[dict]:
         if current == zone_name:
             result.append(npc)
     return result
+
+
+def get_boss_for_zone(zone_name: str) -> dict | None:
+    return _BOSSES_BY_ZONE.get(zone_name)
+
+
+def get_boss_loot(boss_name: str) -> list[dict]:
+    boss = _BOSSES_BY_NAME.get(boss_name)
+    if not boss:
+        return []
+    return [
+        ITEMS_BY_NAME[name] for name in boss.get("loot", []) if name in ITEMS_BY_NAME
+    ]
 
 
 def get_expedition_destination(risk_max: int) -> dict | None:

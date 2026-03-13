@@ -42,6 +42,8 @@ struct GameStateResponse: Codable {
   let nightStart: Int?
   let playerIntent: PlayerIntentState?
   let npcsInZone: [NPCPresence]?
+  let bossesDefeated: [String: Bool]?
+  let totalBosses: Int?
 
   enum CodingKeys: String, CodingKey {
     case tick, timestamp, character, zone, quest, combat, expeditions, log
@@ -53,6 +55,8 @@ struct GameStateResponse: Codable {
     case nightStart = "night_start"
     case playerIntent = "player_intent"
     case npcsInZone = "npcs_in_zone"
+    case bossesDefeated = "bosses_defeated"
+    case totalBosses = "total_bosses"
   }
 }
 
@@ -126,6 +130,9 @@ struct CombatState: Codable {
   let enemyDefense: Int
   let turn: Int
   let aiStrategy: String
+  let isBoss: Bool?
+  let bossPhase: Int?
+  let bossPhaseCount: Int?
 
   enum CodingKeys: String, CodingKey {
     case turn
@@ -135,6 +142,9 @@ struct CombatState: Codable {
     case enemyAttack = "enemy_attack"
     case enemyDefense = "enemy_defense"
     case aiStrategy = "ai_strategy"
+    case isBoss = "is_boss"
+    case bossPhase = "boss_phase"
+    case bossPhaseCount = "boss_phase_count"
   }
 }
 

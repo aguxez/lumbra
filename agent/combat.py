@@ -1,6 +1,6 @@
 import random
 
-from game_state import Character, Combat
+from game_state import Character, Combat, Enemy
 
 
 def calc_damage(attacker_attack: int, defender_defense: int) -> tuple[int, int]:
@@ -16,10 +16,48 @@ def calc_damage(attacker_attack: int, defender_defense: int) -> tuple[int, int]:
     return final_damage, dice_roll
 
 
+def check_boss_phase(enemy: Enemy) -> int | None:
+    """Check if boss should transition phase. Returns new phase index if changed."""
+    if not enemy.is_boss or not enemy.boss_phases:
+        return None
+    hp_pct = enemy.hp / max(1, enemy.max_hp)
+    target_phase = 0
+    for i, phase in enumerate(enemy.boss_phases):
+        if hp_pct <= phase["threshold"]:
+            target_phase = i
+    if target_phase != enemy.boss_phase:
+        enemy.boss_phase = target_phase
+        return target_phase
+    return None
+
+
+def _get_boss_phase_bonuses(enemy: Enemy) -> tuple[int, int]:
+    """Return (attack_bonus, defense_bonus) for the current boss phase."""
+    if not enemy.is_boss or not enemy.boss_phases:
+        return (0, 0)
+    if enemy.boss_phase < len(enemy.boss_phases):
+        phase = enemy.boss_phases[enemy.boss_phase]
+        return (phase.get("attack_bonus", 0), phase.get("defense_bonus", 0))
+    return (0, 0)
+
+
 def resolve_round(character: Character, combat: Combat) -> list[str]:
     log = []
     enemy = combat.enemy
     strategy = combat.ai_strategy
+
+    # Boss: override strategy with phase strategy & disable flee
+    boss_is_defending = False
+    if enemy.is_boss:
+        if strategy == "flee":
+            strategy = "attack"
+            combat.ai_strategy = "attack"
+        if enemy.boss_phases and enemy.boss_phase < len(enemy.boss_phases):
+            phase = enemy.boss_phases[enemy.boss_phase]
+            forced_strategy = phase.get("strategy")
+            if forced_strategy == "defend":
+                # Boss is defensive this phase — reduce boss attack damage later
+                boss_is_defending = True
 
     # Player attacks
     if strategy == "flee":
@@ -49,7 +87,9 @@ def resolve_round(character: Character, combat: Combat) -> list[str]:
             combat.turn += 1
             return log
 
-    player_dmg, player_roll = calc_damage(character.effective_attack, enemy.defense)
+    player_dmg, player_roll = calc_damage(
+        character.effective_attack, enemy.defense + _get_boss_phase_bonuses(enemy)[1]
+    )
 
     if strategy == "defend":
         player_dmg = max(1, player_dmg // 2)
@@ -66,12 +106,22 @@ def resolve_round(character: Character, combat: Combat) -> list[str]:
 
     enemy.hp = max(0, enemy.hp - player_dmg)
 
+    # Check boss phase transition
+    new_phase = check_boss_phase(enemy)
+    if new_phase is not None:
+        log.append(f"[BOSS_PHASE:{new_phase}]")
+
     if not enemy.is_alive():
         log.append(f"The {enemy.name} is defeated!")
         return log
 
-    # Enemy attacks
-    enemy_dmg, enemy_roll = calc_damage(enemy.attack, character.effective_defense)
+    # Enemy attacks — apply boss phase bonuses
+    boss_atk_bonus, _ = _get_boss_phase_bonuses(enemy)
+    if boss_is_defending:
+        boss_atk_bonus //= 2
+    enemy_dmg, enemy_roll = calc_damage(
+        enemy.attack + boss_atk_bonus, character.effective_defense
+    )
 
     if strategy == "defend":
         enemy_dmg = max(1, enemy_dmg // 2)

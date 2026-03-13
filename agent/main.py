@@ -10,6 +10,8 @@ from config_loader import (
     INTENT_CONFIG,
     ITEMS_BY_NAME,
     get_base_tier,
+    get_boss_for_zone,
+    get_boss_loot,
     get_next_base_tier,
     get_zone,
 )
@@ -24,6 +26,9 @@ from game_state import (
 from npc_autonomy import tick_npc_movement
 from player_intent import generate_intent
 from world import (
+    BOSS_DEFEAT_FALLBACKS,
+    BOSS_TAUNT_FALLBACKS,
+    BOSS_VICTORY_FALLBACKS,
     create_expedition,
     generate_hardcoded_quest,
     get_expedition_event,
@@ -34,6 +39,7 @@ from world import (
     roll_encounter,
     roll_loot,
     roll_npc_encounter,
+    spawn_boss,
 )
 
 
@@ -171,6 +177,33 @@ def get_expedition_text(destination: str, progress: int, duration: int) -> str |
             tokenizer, model, destination, progress, duration
         )
     return None
+
+
+def get_boss_taunt(boss_name: str, zone: str, phase: int) -> str:
+    if ai_brain and tokenizer and model:
+        text = ai_brain.generate_boss_taunt(tokenizer, model, boss_name, zone, phase)
+        if text:
+            return text
+    idx = min(phase, len(BOSS_TAUNT_FALLBACKS) - 1)
+    return random.choice(BOSS_TAUNT_FALLBACKS[idx])
+
+
+def get_boss_victory_text(boss_name: str, zone: str, next_zone: str) -> str:
+    if ai_brain and tokenizer and model:
+        text = ai_brain.generate_boss_victory_text(
+            tokenizer, model, boss_name, zone, next_zone
+        )
+        if text:
+            return text
+    return random.choice(BOSS_VICTORY_FALLBACKS)
+
+
+def get_boss_defeat_text(boss_name: str, zone: str) -> str:
+    if ai_brain and tokenizer and model:
+        text = ai_brain.generate_boss_defeat_text(tokenizer, model, boss_name, zone)
+        if text:
+            return text
+    return random.choice(BOSS_DEFEAT_FALLBACKS)
 
 
 def _intent_log(state: GameState, intent):
@@ -422,10 +455,27 @@ def tick_combat(state: GameState):
 
     logs = resolve_round(state.character, combat)
     for msg in logs:
-        state.add_log(msg)
+        # Intercept boss phase markers and generate AI taunt
+        if msg.startswith("[BOSS_PHASE:"):
+            phase = int(msg.split(":")[1].rstrip("]"))
+            taunt = get_boss_taunt(combat.enemy.name, state.zone, phase)
+            state.add_log(
+                f'Phase {phase + 1}/{len(combat.enemy.boss_phases)}! "{taunt}"'
+            )
+        else:
+            state.add_log(msg)
 
     if not state.character.is_alive():
-        handle_death(state)
+        if combat.enemy.is_boss:
+            defeat_text = get_boss_defeat_text(combat.enemy.name, state.zone)
+            state.add_log(f'"{defeat_text}"')
+            state.pending_boss = False
+            current_zone = state.zone
+            handle_death(state)
+            state.zone = current_zone
+            state.location = "at_base"
+        else:
+            handle_death(state)
         return
 
     if not combat.enemy.is_alive():
@@ -435,6 +485,7 @@ def tick_combat(state: GameState):
             return
 
         # Victory
+        is_boss = combat.enemy.is_boss
         growth_logs = apply_stat_growth(state.character)
         for msg in growth_logs:
             state.add_log(msg)
@@ -444,13 +495,43 @@ def tick_combat(state: GameState):
             state.quest.progress += 1
             state.add_log(f"Quest progress: {state.quest.progress}/{state.quest.goal}")
 
-        # Loot drop
-        loot = roll_loot(combat.enemy.name, is_night=state.is_night)
-        if loot:
-            item = InventoryItem.from_config(loot)
-            state.add_log(f"Loot: {item.name} ({item.rarity})!")
-            for msg in equip_or_stash(state.character, item):
-                state.add_log(msg)
+        if is_boss:
+            # Boss victory
+            state.bosses_defeated[state.zone] = True
+            boss_data = get_boss_for_zone(state.zone)
+            if boss_data:
+                # Grant victory XP
+                victory_xp = boss_data.get("victory_xp", 0)
+                state.character.xp += victory_xp
+                state.add_log(f"Boss defeated! +{victory_xp} XP!")
+
+                # Guaranteed loot from boss loot pool
+                boss_loot = get_boss_loot(combat.enemy.name)
+                loot_count = min(random.randint(1, 2), len(boss_loot))
+                for loot_item in random.sample(boss_loot, loot_count):
+                    item = InventoryItem.from_config(loot_item)
+                    state.add_log(f"Boss loot: {item.name} ({item.rarity})!")
+                    for msg in equip_or_stash(state.character, item):
+                        state.add_log(msg)
+
+            # Advance zone
+            new_zone = pick_next_zone(state.zone, state.character.effective_attack)
+            victory_text = get_boss_victory_text(
+                combat.enemy.name, state.zone, new_zone
+            )
+            state.add_log(f'"{victory_text}"')
+            if new_zone != state.zone:
+                state.zone = new_zone
+                state.add_log(f"You venture into the {new_zone}!")
+            state.pending_boss = False
+        else:
+            # Normal loot drop
+            loot = roll_loot(combat.enemy.name, is_night=state.is_night)
+            if loot:
+                item = InventoryItem.from_config(loot)
+                state.add_log(f"Loot: {item.name} ({item.rarity})!")
+                for msg in equip_or_stash(state.character, item):
+                    state.add_log(msg)
 
         state.combat = None
 
@@ -504,6 +585,22 @@ def tick_quest(state: GameState):
             state.add_log(event)
 
 
+def _try_boss_gate(state: GameState) -> bool:
+    """Spawn boss if zone boss not yet defeated. Returns True if boss was spawned."""
+    if state.bosses_defeated.get(state.zone):
+        return False
+    boss = spawn_boss(state.zone, is_night=state.is_night)
+    if not boss:
+        return False
+    state.pending_boss = True
+    state.combat = Combat(enemy=boss)
+    state.combat.ai_strategy = "attack"
+    taunt = get_boss_taunt(boss.name, state.zone, 0)
+    state.add_log(f"A powerful guardian blocks your path: {boss.name}!")
+    state.add_log(f'"{taunt}"')
+    return True
+
+
 def tick_quest_complete(state: GameState):
     quest = state.quest
     assert quest is not None
@@ -536,6 +633,8 @@ def tick_quest_complete(state: GameState):
     if intent.decision == "advance":
         new_zone = pick_next_zone(state.zone, state.character.effective_attack)
         if new_zone != state.zone:
+            if _try_boss_gate(state):
+                return
             state.zone = new_zone
             state.add_log(f"You venture into the {new_zone}!")
     elif intent.decision == "return_home":
@@ -555,6 +654,8 @@ def tick_quest_complete(state: GameState):
         # Also try to advance
         new_zone = pick_next_zone(state.zone, state.character.effective_attack)
         if new_zone != state.zone:
+            if _try_boss_gate(state):
+                return
             state.zone = new_zone
             state.add_log(f"You venture into the {new_zone}!")
     # "stay" = pick up next quest naturally, no zone change

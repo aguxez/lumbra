@@ -6,6 +6,7 @@ from config_loader import (
     DAY_NIGHT,
     EXPEDITION_DESTINATIONS,
     ZONES,
+    get_boss_for_zone,
     get_expedition_destination,
     get_item,
     get_loot_for_mob,
@@ -14,6 +15,36 @@ from config_loader import (
 )
 from game_state import ActiveBuff, Enemy, Expedition, InventoryItem, NPCEncounter
 from npc_autonomy import get_available_trades, scale_buff
+
+BOSS_TAUNT_FALLBACKS = [
+    [
+        "You dare challenge me?",
+        "I'm stronger than you think.",
+        "You will regret this!",
+    ],
+    [
+        "You've wounded me... impressive.",
+        "Now I fight seriously!",
+        "Pain only fuels my rage!",
+    ],
+    [
+        "I... will NOT... fall!",
+        "This ends NOW!",
+        "With my last breath, I strike!",
+    ],
+]
+
+BOSS_VICTORY_FALLBACKS = [
+    "The guardian falls and the path ahead opens.",
+    "Victory! A new horizon beckons.",
+    "The beast crumbles. Onward to greater challenges.",
+]
+
+BOSS_DEFEAT_FALLBACKS = [
+    "The boss proved too powerful. You retreat to recover.",
+    "Darkness closes in. You awaken at your base.",
+    "A crushing defeat. But you will return stronger.",
+]
 
 QUEST_TEMPLATES = [
     {"desc": "Kill {n} {monster}s", "type": "kill"},
@@ -35,17 +66,20 @@ EXPLORATION_EVENTS = [
 ]
 
 
+def _apply_night_scaling(hp: int, attack: int, is_night: bool) -> tuple[int, int]:
+    if is_night:
+        attack = int(attack * DAY_NIGHT.get("night_mob_attack_mult", 1.0))
+        hp = int(hp * DAY_NIGHT.get("night_mob_hp_mult", 1.0))
+    return hp, attack
+
+
 def roll_encounter(zone_name: str, is_night: bool = False) -> Enemy | None:
     if random.random() < 0.6:
         monsters = get_mobs_for_zone(zone_name)
         if not monsters:
             return None
         m = random.choice(monsters)
-        hp = m["hp"]
-        attack = m["attack"]
-        if is_night:
-            attack = int(attack * DAY_NIGHT.get("night_mob_attack_mult", 1.0))
-            hp = int(hp * DAY_NIGHT.get("night_mob_hp_mult", 1.0))
+        hp, attack = _apply_night_scaling(m["hp"], m["attack"], is_night)
         return Enemy(
             name=m["name"],
             hp=hp,
@@ -54,6 +88,22 @@ def roll_encounter(zone_name: str, is_night: bool = False) -> Enemy | None:
             defense=m["defense"],
         )
     return None
+
+
+def spawn_boss(zone_name: str, is_night: bool = False) -> Enemy | None:
+    boss_data = get_boss_for_zone(zone_name)
+    if not boss_data:
+        return None
+    hp, attack = _apply_night_scaling(boss_data["hp"], boss_data["attack"], is_night)
+    return Enemy(
+        name=boss_data["name"],
+        hp=hp,
+        max_hp=hp,
+        attack=attack,
+        defense=boss_data["defense"],
+        is_boss=True,
+        boss_phases=boss_data.get("phases", []),
+    )
 
 
 def pick_next_zone(current_zone: str, character_attack: int) -> str:
