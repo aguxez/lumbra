@@ -35,6 +35,30 @@ struct MainWindowView: View {
             VStack(spacing: 12) {
               CharacterCardView(character: gameState.character, zone: gameState.zone)
 
+              // Player intent thinking bubble
+              if let intent = gameState.playerIntent, !intent.reason.isEmpty {
+                HStack(spacing: 6) {
+                  Image(systemName: "brain.head.profile")
+                    .font(Theme.fontTiny)
+                    .foregroundColor(.purple)
+                  Text(intent.reason)
+                    .font(Theme.fontSmall)
+                    .foregroundColor(Theme.bodyText)
+                    .italic()
+                    .lineLimit(2)
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                  RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.purple.opacity(0.08))
+                    .overlay(
+                      RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.purple.opacity(0.2), lineWidth: 1)
+                    )
+                )
+              }
+
               // Day/Night + Location indicators
               HStack(spacing: 8) {
                 if let isNight = gameState.isNight,

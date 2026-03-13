@@ -1127,6 +1127,18 @@
       "description": "A fortified base. Safe and well-stocked."
     }
   ],
+  "player_intent": {
+    "enabled": true,
+    "low_hp_threshold": 0.35,
+    "advance_hp_threshold": 0.6,
+    "return_home_hp_threshold": 0.4,
+    "night_caution_hp_threshold": 0.7,
+    "power_ratio_flee_threshold": 0.5,
+    "expedition_chance_on_advance": 0.30,
+    "expedition_chance_spontaneous": 0.03,
+    "show_thinking_in_log": true,
+    "llm_temperature": 0.7
+  },
   "day_night": {
     "cycle_length": 40,
     "day_start": 0,

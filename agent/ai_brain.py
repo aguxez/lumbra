@@ -179,6 +179,34 @@ def generate_npc_dialogue(
     return None
 
 
+def decide_intent(
+    tokenizer, model, trigger: str, state_summary: str, options: list[str], config: dict
+) -> tuple[str, str] | None:
+    """Ask the LLM to pick a numbered option for a decision trigger."""
+    numbered = "\n".join(f"{i + 1}. {opt}" for i, opt in enumerate(options))
+    prompt = (
+        f"You are an RPG adventurer deciding what to do.\n"
+        f"Situation: {trigger.replace('_', ' ')}.\n"
+        f"Your status: {state_summary}\n"
+        f"Choose ONE option:\n{numbered}\n"
+        f"Reply with just the number."
+    )
+
+    temperature = config.get("llm_temperature", 0.7)
+    result = _generate(tokenizer, model, prompt, max_tokens=40, temperature=temperature)
+    if result:
+        valid_digits = set(str(i + 1) for i in range(len(options)))
+        first_digit = re.search(r"[" + "".join(valid_digits) + r"]", result)
+        if first_digit:
+            idx = int(first_digit.group()) - 1
+            decision = options[idx]
+            # Try to extract a short reason from the response
+            reason_match = re.search(r"[.!]\s*(.+)", result)
+            reason = reason_match.group(1).strip()[:80] if reason_match else ""
+            return (decision, reason)
+    return None
+
+
 def generate_expedition_event(
     tokenizer, model, destination: str, progress: int, duration: int
 ) -> str | None:
