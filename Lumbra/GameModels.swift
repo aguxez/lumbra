@@ -19,6 +19,11 @@ struct PlayerIntentState: Codable {
   let reason: String
 }
 
+struct NPCPresence: Codable {
+  let name: String
+  let role: String
+}
+
 struct GameStateResponse: Codable {
   let tick: Int
   let timestamp: String
@@ -36,6 +41,7 @@ struct GameStateResponse: Codable {
   let cycleLength: Int?
   let nightStart: Int?
   let playerIntent: PlayerIntentState?
+  let npcsInZone: [NPCPresence]?
 
   enum CodingKeys: String, CodingKey {
     case tick, timestamp, character, zone, quest, combat, expeditions, log
@@ -46,6 +52,7 @@ struct GameStateResponse: Codable {
     case cycleLength = "cycle_length"
     case nightStart = "night_start"
     case playerIntent = "player_intent"
+    case npcsInZone = "npcs_in_zone"
   }
 }
 

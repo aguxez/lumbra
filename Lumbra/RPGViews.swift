@@ -47,6 +47,17 @@ struct ItemRowView: View {
 struct CharacterCardView: View {
   let character: CharacterState
   let zone: String
+  var npcsInZone: [NPCPresence]?
+
+  private func roleIcon(_ role: String) -> String {
+    switch role {
+    case "merchant": return "bag.fill"
+    case "sage": return "star.fill"
+    case "blacksmith": return "hammer.fill"
+    case "wanderer": return "figure.walk"
+    default: return "person.fill"
+    }
+  }
 
   var body: some View {
     VStack(spacing: 8) {
@@ -58,6 +69,22 @@ struct CharacterCardView: View {
         Text(zone)
           .font(Theme.fontSmall)
           .foregroundColor(Theme.mutedText)
+      }
+
+      if let npcs = npcsInZone, !npcs.isEmpty {
+        HStack(spacing: 6) {
+          ForEach(npcs, id: \.name) { npc in
+            HStack(spacing: 2) {
+              Image(systemName: roleIcon(npc.role))
+                .font(Theme.fontTiny)
+                .foregroundColor(.teal)
+              Text(npc.name.components(separatedBy: " ").last ?? npc.name)
+                .font(Theme.fontTiny)
+                .foregroundColor(.teal)
+            }
+          }
+          Spacer()
+        }
       }
 
       HStack(spacing: 8) {

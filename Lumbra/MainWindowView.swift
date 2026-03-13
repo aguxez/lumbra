@@ -33,7 +33,7 @@ struct MainWindowView: View {
           // Left sidebar
           ScrollView {
             VStack(spacing: 12) {
-              CharacterCardView(character: gameState.character, zone: gameState.zone)
+              CharacterCardView(character: gameState.character, zone: gameState.zone, npcsInZone: gameState.npcsInZone)
 
               // Player intent thinking bubble
               if let intent = gameState.playerIntent, !intent.reason.isEmpty {

@@ -762,6 +762,9 @@
       "name": "Old Farmer Gregor",
       "role": "merchant",
       "zone": "Peaceful Meadow",
+      "movement": {
+        "pattern": "home"
+      },
       "trades": [
         {
           "offer": "Healing Herb",
@@ -776,7 +779,8 @@
         {
           "type": "defense",
           "value": 2,
-          "ticks": 10
+          "ticks": 10,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -784,12 +788,16 @@
       "name": "Meadow Sage Elira",
       "role": "sage",
       "zone": "Peaceful Meadow",
+      "movement": {
+        "pattern": "home"
+      },
       "trades": [],
       "buffs": [
         {
           "type": "attack",
           "value": 2,
-          "ticks": 8
+          "ticks": 8,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -797,17 +805,31 @@
       "name": "Ranger Thalia",
       "role": "wanderer",
       "zone": "Whispering Woods",
+      "movement": {
+        "pattern": "wander",
+        "range": 3,
+        "pace": 15,
+        "night_return": false
+      },
       "trades": [
         {
           "offer": "Forest Amulet",
-          "request": "Iron Sword"
+          "request": "Iron Sword",
+          "min_affinity": 30
+        },
+        {
+          "offer": "Steel Blade",
+          "request": "Iron Sword",
+          "min_affinity": 30,
+          "zone_danger_min": 3
         }
       ],
       "buffs": [
         {
           "type": "attack",
           "value": 3,
-          "ticks": 10
+          "ticks": 10,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -815,6 +837,11 @@
       "name": "Blacksmith Duran",
       "role": "blacksmith",
       "zone": "Whispering Woods",
+      "movement": {
+        "pattern": "route",
+        "route": ["Whispering Woods", "Dark Forest"],
+        "pace": 25
+      },
       "trades": [
         {
           "offer": "Iron Sword",
@@ -823,13 +850,19 @@
         {
           "offer": "Leather Armor",
           "request": "Healing Herb"
+        },
+        {
+          "offer": "Steel Blade",
+          "request": "Iron Sword",
+          "zone_danger_min": 3
         }
       ],
       "buffs": [
         {
           "type": "defense",
           "value": 3,
-          "ticks": 10
+          "ticks": 10,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -837,17 +870,29 @@
       "name": "Hermit Malachar",
       "role": "sage",
       "zone": "Dark Forest",
+      "movement": {
+        "pattern": "pilgrimage",
+        "destination": "Dragon's Peak",
+        "pace": 30
+      },
       "trades": [
         {
           "offer": "Steel Blade",
           "request": "Iron Sword"
+        },
+        {
+          "offer": "Shadow Cloak",
+          "request": "Leather Armor",
+          "min_affinity": 50,
+          "zone_danger_min": 4
         }
       ],
       "buffs": [
         {
           "type": "attack",
           "value": 4,
-          "ticks": 12
+          "ticks": 12,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -855,6 +900,12 @@
       "name": "Ghost Merchant Vex",
       "role": "merchant",
       "zone": "Dark Forest",
+      "movement": {
+        "pattern": "wander",
+        "range": 2,
+        "pace": 20,
+        "night_return": false
+      },
       "trades": [
         {
           "offer": "Shadow Cloak",
@@ -863,13 +914,19 @@
         {
           "offer": "Iron Shield",
           "request": "Wooden Shield"
+        },
+        {
+          "offer": "Venom Dagger",
+          "request": "Steel Blade",
+          "night_only": true
         }
       ],
       "buffs": [
         {
           "type": "defense",
           "value": 4,
-          "ticks": 8
+          "ticks": 8,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -877,6 +934,11 @@
       "name": "Witch Doctor Zara",
       "role": "sage",
       "zone": "Cursed Swamp",
+      "movement": {
+        "pattern": "route",
+        "route": ["Cursed Swamp", "Dark Forest"],
+        "pace": 25
+      },
       "trades": [
         {
           "offer": "Venom Dagger",
@@ -887,7 +949,8 @@
         {
           "type": "attack",
           "value": 5,
-          "ticks": 10
+          "ticks": 10,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -895,6 +958,11 @@
       "name": "Swamp Trader Bogden",
       "role": "merchant",
       "zone": "Cursed Swamp",
+      "movement": {
+        "pattern": "route",
+        "route": ["Cursed Swamp", "Whispering Woods", "Peaceful Meadow", "Cursed Swamp"],
+        "pace": 20
+      },
       "trades": [
         {
           "offer": "Swamp Boots",
@@ -909,7 +977,8 @@
         {
           "type": "defense",
           "value": 5,
-          "ticks": 10
+          "ticks": 10,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -917,6 +986,9 @@
       "name": "Dragonsworn Kael",
       "role": "blacksmith",
       "zone": "Dragon's Peak",
+      "movement": {
+        "pattern": "home"
+      },
       "trades": [
         {
           "offer": "Flame Sword",
@@ -931,7 +1003,8 @@
         {
           "type": "attack",
           "value": 6,
-          "ticks": 12
+          "ticks": 12,
+          "affinity_bonus": 1
         }
       ]
     },
@@ -939,6 +1012,11 @@
       "name": "Oracle Seraphine",
       "role": "sage",
       "zone": "Dragon's Peak",
+      "movement": {
+        "pattern": "pilgrimage",
+        "destination": "Crystal Spires",
+        "pace": 35
+      },
       "trades": [
         {
           "offer": "Dragon's Heart",
@@ -949,7 +1027,8 @@
         {
           "type": "defense",
           "value": 6,
-          "ticks": 12
+          "ticks": 12,
+          "affinity_bonus": 1
         }
       ]
     }

@@ -3,7 +3,7 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 
-from config_loader import DAY_NIGHT, get_base_tier
+from config_loader import DAY_NIGHT, get_base_tier, get_npcs_in_zone
 
 SAVE_PATH = os.path.join(os.path.dirname(__file__), "savegame.json")
 
@@ -258,6 +258,7 @@ class GameState:
     combat: Combat | None = None
     npc_encounter: NPCEncounter | None = None
     npc_relationships: dict = field(default_factory=dict)
+    npc_world: dict = field(default_factory=dict)
     expeditions: list[Expedition] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
     base: Base = field(default_factory=Base)
@@ -308,6 +309,10 @@ class GameState:
                 else 0,
                 "description": base_tier_data["description"] if base_tier_data else "",
             },
+            "npcs_in_zone": [
+                {"name": npc["name"], "role": npc["role"]}
+                for npc in get_npcs_in_zone(self.zone, self.npc_world)
+            ],
             "location": self.location,
             "is_night": self.is_night,
             "cycle_position": self.cycle_position,
@@ -355,6 +360,7 @@ class GameState:
             if self.combat
             else None,
             "npc_relationships": self.npc_relationships,
+            "npc_world": self.npc_world,
             "expeditions": [asdict(e) for e in self.expeditions],
             "log": self.log[-20:],
             "base": {
@@ -476,6 +482,7 @@ class GameState:
             quest=quest,
             combat=combat,
             npc_relationships=data.get("npc_relationships", {}),
+            npc_world=data.get("npc_world", {}),
             expeditions=expeditions,
             log=data.get("log", []),
             base=base,
