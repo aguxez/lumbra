@@ -13,6 +13,12 @@ struct BaseState: Codable {
   }
 }
 
+struct PlayerIntentState: Codable {
+  let trigger: String
+  let decision: String
+  let reason: String
+}
+
 struct GameStateResponse: Codable {
   let tick: Int
   let timestamp: String
@@ -29,6 +35,7 @@ struct GameStateResponse: Codable {
   let cyclePosition: Int?
   let cycleLength: Int?
   let nightStart: Int?
+  let playerIntent: PlayerIntentState?
 
   enum CodingKeys: String, CodingKey {
     case tick, timestamp, character, zone, quest, combat, expeditions, log
@@ -38,6 +45,7 @@ struct GameStateResponse: Codable {
     case cyclePosition = "cycle_position"
     case cycleLength = "cycle_length"
     case nightStart = "night_start"
+    case playerIntent = "player_intent"
   }
 }
 

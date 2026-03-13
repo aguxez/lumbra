@@ -7,6 +7,7 @@ import requests
 from combat import apply_stat_growth, resolve_round
 from config_loader import (
     DAY_NIGHT,
+    INTENT_CONFIG,
     ITEMS_BY_NAME,
     get_base_tier,
     get_next_base_tier,
@@ -20,6 +21,7 @@ from game_state import (
     InventoryItem,
     Quest,
 )
+from player_intent import generate_intent
 from world import (
     create_expedition,
     generate_hardcoded_quest,
@@ -170,6 +172,12 @@ def get_expedition_text(destination: str, progress: int, duration: int) -> str |
     return None
 
 
+def _intent_log(state: GameState, intent):
+    """Add a [Thinking] log entry if configured."""
+    if INTENT_CONFIG.get("show_thinking_in_log", True) and intent.reason:
+        state.add_log(f"[Thinking] {intent.reason}")
+
+
 def tick_day_night(state: GameState):
     if state.cycle_length <= 0:
         return
@@ -178,6 +186,16 @@ def tick_day_night(state: GameState):
     is_night_now = state.is_night
     if state.was_night and not is_night_now:
         state.add_log("The sun rises. A new day begins.")
+        # Dawn intent
+        intent = generate_intent(
+            "dawn",
+            state,
+            tokenizer=tokenizer,
+            model=model,
+            ai_brain=ai_brain,
+        )
+        state._current_intent = intent.to_dict()
+        _intent_log(state, intent)
     elif not state.was_night and is_night_now:
         state.add_log("Darkness falls. The night creatures stir...")
     state.was_night = is_night_now
@@ -225,8 +243,19 @@ def tick_location(state: GameState):
             state.location = "at_base"
             state.add_log(f"You return to your {state.base.name} to rest.")
     else:
-        # Step 4: Stay at base until dawn (no leaving at full HP during night)
+        # Stay at base until dawn (no leaving at full HP during night)
         if not state.is_night:
+            # Check dawn intent — stay_rest keeps us at base
+            dawn_intent = state._current_intent
+            if (
+                dawn_intent
+                and dawn_intent.get("trigger") == "dawn"
+                and dawn_intent.get("decision") == "stay_rest"
+            ):
+                state.add_log("Resting a bit longer before heading out.")
+                state._current_intent = None  # Consumed, will leave next tick
+                return
+            state._current_intent = None
             state.location = "exploring"
             state.ticks_exploring = 0
             state.add_log("You set out to explore once more.")
@@ -369,7 +398,25 @@ def handle_death(state: GameState):
 def tick_combat(state: GameState):
     combat = state.combat
     assert combat is not None
-    strategy = get_combat_strategy(state.character.to_dict(), combat.to_dict())
+
+    # Low HP intent check
+    char = state.character
+    hp_pct = char.hp / max(1, char.max_hp)
+    low_hp_threshold = INTENT_CONFIG.get("low_hp_threshold", 0.35)
+    if hp_pct < low_hp_threshold and combat.ai_strategy != "flee":
+        intent = generate_intent(
+            "low_hp",
+            state,
+            tokenizer=tokenizer,
+            model=model,
+            ai_brain=ai_brain,
+            enemy=combat.enemy,
+        )
+        state._current_intent = intent.to_dict()
+        _intent_log(state, intent)
+        strategy = "attack" if intent.decision == "press_on" else intent.decision
+    else:
+        strategy = get_combat_strategy(state.character.to_dict(), combat.to_dict())
     combat.ai_strategy = strategy
 
     logs = resolve_round(state.character, combat)
@@ -411,7 +458,24 @@ def tick_quest(state: GameState):
     # Roll for encounter
     enemy = roll_encounter(state.zone, is_night=state.is_night)
     if enemy:
+        # Pre-engagement intent
+        intent = generate_intent(
+            "combat_start",
+            state,
+            tokenizer=tokenizer,
+            model=model,
+            ai_brain=ai_brain,
+            enemy=enemy,
+        )
+        state._current_intent = intent.to_dict()
+        _intent_log(state, intent)
+
+        if intent.decision == "flee":
+            state.add_log(f"You spot a {enemy.name} but decide to avoid it.")
+            return  # Skip combat entirely
+
         state.combat = Combat(enemy=enemy)
+        state.combat.ai_strategy = intent.decision  # "attack" or "defend"
         state.add_log(f"A wild {enemy.name} appears!")
     else:
         # Try NPC encounter first
@@ -457,8 +521,26 @@ def tick_quest_complete(state: GameState):
 
     state.quest = None
 
-    # Maybe launch an expedition on quest completion (25% chance)
-    if random.random() < 0.25:
+    # Quest complete intent decides zone/expedition behavior
+    intent = generate_intent(
+        "quest_complete",
+        state,
+        tokenizer=tokenizer,
+        model=model,
+        ai_brain=ai_brain,
+    )
+    state._current_intent = intent.to_dict()
+    _intent_log(state, intent)
+
+    if intent.decision == "advance":
+        new_zone = pick_next_zone(state.zone, state.character.effective_attack)
+        if new_zone != state.zone:
+            state.zone = new_zone
+            state.add_log(f"You venture into the {new_zone}!")
+    elif intent.decision == "return_home":
+        state.location = "at_base"
+        state.add_log(f"You return to your {state.base.name} to recover.")
+    elif intent.decision == "expedition":
         zone_data = get_zone(state.zone)
         danger = zone_data["danger"] if zone_data else 1
         exp = create_expedition(danger)
@@ -469,12 +551,12 @@ def tick_quest_complete(state: GameState):
                 f"(risk {exp.risk_level}, "
                 f"~{exp.duration} ticks)"
             )
-
-    # Maybe move zones
-    new_zone = pick_next_zone(state.zone, state.character.effective_attack)
-    if new_zone != state.zone:
-        state.zone = new_zone
-        state.add_log(f"You venture into the {new_zone}!")
+        # Also try to advance
+        new_zone = pick_next_zone(state.zone, state.character.effective_attack)
+        if new_zone != state.zone:
+            state.zone = new_zone
+            state.add_log(f"You venture into the {new_zone}!")
+    # "stay" = pick up next quest naturally, no zone change
 
 
 def tick_idle(state: GameState):
@@ -538,7 +620,8 @@ def maybe_launch_expedition(state: GameState):
         return
     if state.combat:
         return
-    if random.random() > 0.10:
+    spontaneous_chance = INTENT_CONFIG.get("expedition_chance_spontaneous", 0.03)
+    if random.random() > spontaneous_chance:
         return
 
     zone_data = get_zone(state.zone)
@@ -579,6 +662,7 @@ def main():
     while True:
         state.tick += 1
         state.log = []  # Fresh log per tick
+        state._current_intent = None  # Reset intent each tick
 
         # IMPORTANT: tick_day_night must run before tick_location.
         # tick_day_night updates was_night and fatigue state;

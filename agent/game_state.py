@@ -264,6 +264,7 @@ class GameState:
     location: str = "exploring"
     ticks_exploring: int = 0
     was_night: bool = False
+    _current_intent: dict | None = field(default=None, repr=False)
 
     @property
     def cycle_length(self) -> int:
@@ -312,6 +313,7 @@ class GameState:
             "cycle_position": self.cycle_position,
             "cycle_length": self.cycle_length,
             "night_start": self.night_start,
+            "player_intent": self._current_intent,
         }
 
     def add_log(self, message: str):

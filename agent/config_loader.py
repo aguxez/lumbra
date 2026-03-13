@@ -71,6 +71,7 @@ EXPEDITION_DESTINATIONS: list[dict] = _CONFIG.get("expedition_destinations", [])
 BASE_TIERS: list[dict] = _CONFIG.get("base_tiers", [])
 _BASE_TIERS_BY_TIER: dict[int, dict] = {t["tier"]: t for t in BASE_TIERS}
 DAY_NIGHT: dict = _CONFIG.get("day_night", {})
+INTENT_CONFIG: dict = _CONFIG.get("player_intent", {})
 
 
 def get_base_tier(tier: int) -> dict | None:
