@@ -404,7 +404,7 @@ class GameState:
             "cycle_length": self.cycle_length,
             "night_start": self.night_start,
             "player_intent": self._current_intent,
-            "economy": self.economy_data if self.economy_data else {},
+            "economy": self.economy_data if self.economy_data else None,
         }
 
     def add_log(self, message: str):

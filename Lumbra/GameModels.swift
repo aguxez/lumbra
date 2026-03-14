@@ -44,9 +44,10 @@ struct GameStateResponse: Codable {
   let npcsInZone: [NPCPresence]?
   let bossesDefeated: [String: Bool]?
   let totalBosses: Int?
+  let economy: EconomyData?
   enum CodingKeys: String, CodingKey {
     case tick, timestamp, character, zone, quest, combat, expeditions, log
-    case base, location
+    case base, location, economy
     case npcEncounter = "npc_encounter"
     case isNight = "is_night"
     case cyclePosition = "cycle_position"
@@ -182,6 +183,50 @@ struct NPCEncounterState: Codable {
     case buffType = "buff_type"
     case buffValue = "buff_value"
     case buffTicks = "buff_ticks"
+  }
+}
+
+struct EconomyData: Codable {
+  let merchantStates: [String: MerchantStateData]
+  let lastRestockTick: Int
+  let tradeHistory: [TradeRecord]
+  let priceAdjustments: [String: Double]
+  let marketNews: String
+
+  enum CodingKeys: String, CodingKey {
+    case priceAdjustments = "price_adjustments"
+    case merchantStates = "merchant_states"
+    case lastRestockTick = "last_restock_tick"
+    case tradeHistory = "trade_history"
+    case marketNews = "market_news"
+  }
+}
+
+struct MerchantStateData: Codable {
+  let npcName: String
+  let gold: Int
+  let goldCap: Int
+  let inventory: [InventoryItem]
+
+  enum CodingKeys: String, CodingKey {
+    case npcName = "npc_name"
+    case gold, inventory
+    case goldCap = "gold_cap"
+  }
+}
+
+struct TradeRecord: Codable, Identifiable {
+  var id: String { "\(tick)_\(merchantName)_\(itemName)_\(action)" }
+  let tick: Int
+  let merchantName: String
+  let action: String
+  let itemName: String
+  let price: Int
+
+  enum CodingKeys: String, CodingKey {
+    case tick, action, price
+    case merchantName = "merchant_name"
+    case itemName = "item_name"
   }
 }
 

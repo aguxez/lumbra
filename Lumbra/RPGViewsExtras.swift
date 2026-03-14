@@ -132,6 +132,41 @@ struct StorageSection: View {
   }
 }
 
+// MARK: - Market Pulse (Sidebar)
+
+struct MarketPulseView: View {
+  let economy: EconomyData
+
+  private var totalGold: Int {
+    economy.merchantStates.values.reduce(0) { $0 + $1.gold }
+  }
+
+  var body: some View {
+    HStack(spacing: 6) {
+      Image(systemName: "chart.line.uptrend.xyaxis")
+        .font(Theme.fontTiny)
+        .foregroundColor(.yellow)
+      Text("\(totalGold)g total")
+        .font(Theme.fontTiny.monospacedDigit())
+        .foregroundColor(Theme.bodyText)
+      Text("|")
+        .font(Theme.fontTiny)
+        .foregroundColor(Theme.mutedText)
+      Text("\(economy.priceAdjustments.count) adj")
+        .font(Theme.fontTiny.monospacedDigit())
+        .foregroundColor(Theme.bodyText)
+      Text("|")
+        .font(Theme.fontTiny)
+        .foregroundColor(Theme.mutedText)
+      Text("\(economy.tradeHistory.count) trades")
+        .font(Theme.fontTiny.monospacedDigit())
+        .foregroundColor(Theme.bodyText)
+      Spacer()
+    }
+    .padding(.horizontal, 4)
+  }
+}
+
 // MARK: - Inventory Section
 
 struct InventorySection: View {
