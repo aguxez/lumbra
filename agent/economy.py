@@ -132,6 +132,8 @@ class EconomyState:
     merchant_states: dict[str, MerchantState] = field(default_factory=dict)
     last_restock_tick: int = 0
     trade_history: list[TradeRecord] = field(default_factory=list)
+    price_adjustments: dict[str, float] = field(default_factory=dict)
+    market_news: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -140,6 +142,8 @@ class EconomyState:
             },
             "last_restock_tick": self.last_restock_tick,
             "trade_history": [t.to_dict() for t in self.trade_history],
+            "price_adjustments": self.price_adjustments,
+            "market_news": self.market_news,
         }
 
     @classmethod
@@ -156,6 +160,8 @@ class EconomyState:
                 merchant_states=merchant_states,
                 last_restock_tick=data.get("last_restock_tick", 0),
                 trade_history=trade_history,
+                price_adjustments=data.get("price_adjustments", {}),
+                market_news=data.get("market_news", ""),
             )
         except (KeyError, TypeError, ValueError) as e:
             logger.warning("Corrupt economy data, reinitializing: %s", e)
@@ -169,14 +175,20 @@ def base_price(item: InventoryItem) -> int:
     return max(5, stat_value * mult + mult * 3)
 
 
-def buy_price(item: InventoryItem) -> int:
+def buy_price(
+    item: InventoryItem, price_adjustments: dict[str, float] | None = None
+) -> int:
     """Price the player pays to buy from a merchant."""
-    return base_price(item)
+    mult = (price_adjustments or {}).get(item.name, 1.0)
+    return max(5, int(base_price(item) * mult))
 
 
-def sell_price(item: InventoryItem) -> int:
+def sell_price(
+    item: InventoryItem, price_adjustments: dict[str, float] | None = None
+) -> int:
     """Price the merchant pays the player for an item."""
-    return max(1, int(base_price(item) * 0.4))
+    mult = (price_adjustments or {}).get(item.name, 1.0)
+    return max(1, int(base_price(item) * 0.4 * mult))
 
 
 def _get_role_items(role: str) -> list[dict]:
@@ -291,7 +303,7 @@ def restock_merchants(economy: EconomyState, tick: int) -> list[str]:
                 if not any(i.name == new_item_data["name"] for i in ms.inventory):
                     ms.inventory.append(InventoryItem.from_config(new_item_data))
                     logs.append(
-                        f"{ms.npc_name} restocked: "
+                        f"[RESTOCK] {ms.npc_name} restocked: "
                         f"{new_item_data['name']} now available."
                     )
 
@@ -299,7 +311,10 @@ def restock_merchants(economy: EconomyState, tick: int) -> list[str]:
 
 
 def resolve_player_buy(
-    character: Character, merchant: MerchantState, item_name: str
+    character: Character,
+    merchant: MerchantState,
+    item_name: str,
+    price_adjustments: dict[str, float] | None = None,
 ) -> list[str]:
     """Player buys an item from a merchant."""
     logs: list[str] = []
@@ -314,7 +329,7 @@ def resolve_player_buy(
         return logs
 
     item = merchant.inventory[item_idx]
-    price = buy_price(item)
+    price = buy_price(item, price_adjustments)
 
     if character.gold < price:
         logs.append(
@@ -326,13 +341,20 @@ def resolve_player_buy(
     character.gold -= price
     merchant.gold += price
     bought_item = merchant.inventory.pop(item_idx)
-    logs.append(f"Bought {item_name} from {merchant.npc_name} for {price}g!")
+    mult = (price_adjustments or {}).get(item_name, 1.0)
+    msg = f"[TRADE] Bought {item_name} from {merchant.npc_name} for {price}g!"
+    if abs(mult - 1.0) > 1e-6:
+        msg += f" Market rate: {mult:.0%} of base."
+    logs.append(msg)
     logs.extend(equip_or_stash(character, bought_item))
     return logs
 
 
 def resolve_player_sell(
-    character: Character, merchant: MerchantState, item_name: str
+    character: Character,
+    merchant: MerchantState,
+    item_name: str,
+    price_adjustments: dict[str, float] | None = None,
 ) -> list[str]:
     """Player sells an item to a merchant."""
     logs: list[str] = []
@@ -347,7 +369,7 @@ def resolve_player_sell(
         return logs
 
     item = character.inventory[item_idx]
-    price = sell_price(item)
+    price = sell_price(item, price_adjustments)
 
     if merchant.gold < price:
         logs.append(f"{merchant.npc_name} can't afford to buy {item_name}.")
@@ -358,7 +380,11 @@ def resolve_player_sell(
     character.gold += price
     merchant.gold -= price
     merchant.inventory.append(sold_item)
-    logs.append(f"Sold {item_name} to {merchant.npc_name} for {price}g!")
+    mult = (price_adjustments or {}).get(item_name, 1.0)
+    msg = f"[TRADE] Sold {item_name} to {merchant.npc_name} for {price}g!"
+    if abs(mult - 1.0) > 1e-6:
+        msg += f" Market rate: {mult:.0%} of base."
+    logs.append(msg)
     return logs
 
 
@@ -387,7 +413,9 @@ def is_upgrade(item: InventoryItem, character: Character) -> bool:
 
 
 def get_trade_options(
-    character: Character, merchant: MerchantState
+    character: Character,
+    merchant: MerchantState,
+    price_adjustments: dict[str, float] | None = None,
 ) -> list[tuple[str, str, int, bool]]:
     """Build list of (action, item_name, price, is_upgrade) options for AI trade.
 
@@ -399,7 +427,7 @@ def get_trade_options(
     affordable = [
         (item, p)
         for item in merchant.inventory
-        if (p := buy_price(item)) <= character.gold
+        if (p := buy_price(item, price_adjustments)) <= character.gold
     ]
     if affordable:
         best = max(
@@ -420,7 +448,7 @@ def get_trade_options(
             item.item_type != "consumable"
             or consumable_count > LOW_CONSUMABLE_THRESHOLD
         )
-        and (sp := sell_price(item)) <= merchant.gold
+        and (sp := sell_price(item, price_adjustments)) <= merchant.gold
     ]
     if sellable:
         worst = min(
@@ -434,7 +462,9 @@ def get_trade_options(
 
 
 def fallback_trade_decision(
-    character: Character, merchant: MerchantState
+    character: Character,
+    merchant: MerchantState,
+    price_adjustments: dict[str, float] | None = None,
 ) -> tuple[str, str, str]:
     """Heuristic trade decision. Returns (action, item_name, reason)."""
     # 1. Buy potions if low on consumables
@@ -444,7 +474,7 @@ def fallback_trade_decision(
     if consumable_count < LOW_CONSUMABLE_THRESHOLD:
         for item in merchant.inventory:
             if item.item_type == "consumable" and item.effect_type == "heal":
-                price = buy_price(item)
+                price = buy_price(item, price_adjustments)
                 if character.gold >= price:
                     reason = (
                         f"Need healing supplies"
@@ -460,7 +490,7 @@ def fallback_trade_decision(
     cur_w_name = cur_w.name if cur_w else "bare fists"
     for item in merchant.inventory:
         if item.item_type == "weapon" and item.attack > current_atk:
-            price = buy_price(item)
+            price = buy_price(item, price_adjustments)
             if character.gold >= price:
                 reason = (
                     f"Found {item.name}"
@@ -477,7 +507,7 @@ def fallback_trade_decision(
     cur_a_name = cur_a.name if cur_a else "no armor"
     for item in merchant.inventory:
         if item.item_type in ("armor", "shield") and item.defense > current_def:
-            price = buy_price(item)
+            price = buy_price(item, price_adjustments)
             if character.gold >= price:
                 reason = (
                     f"Found {item.name}"
@@ -503,7 +533,7 @@ def fallback_trade_decision(
             and item.defense <= character.equipped_armor.defense
         )
         if (is_worse_weapon or is_worse_armor) and (
-            sp := sell_price(item)
+            sp := sell_price(item, price_adjustments)
         ) <= merchant.gold:
             return (
                 "sell",
@@ -512,6 +542,23 @@ def fallback_trade_decision(
             )
 
     return ("skip", "", "Nothing worth trading.")
+
+
+def build_merchant_summaries(economy: EconomyState) -> list[dict[str, object]]:
+    """Build merchant summary dicts for AI market evaluation."""
+    summaries: list[dict[str, object]] = []
+    for ms in economy.merchant_states.values():
+        npc = next((n for n in NPCS if n["name"] == ms.npc_name), None)
+        role = npc.get("role", "wanderer") if npc else "wanderer"
+        summaries.append(
+            {
+                "name": ms.npc_name,
+                "role": role,
+                "gold": ms.gold,
+                "items": [i.name for i in ms.inventory],
+            }
+        )
+    return summaries
 
 
 def total_system_gold(character: Character, economy: EconomyState) -> int:

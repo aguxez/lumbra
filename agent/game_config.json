@@ -968,7 +968,12 @@
       "zone": "Cursed Swamp",
       "movement": {
         "pattern": "route",
-        "route": ["Cursed Swamp", "Whispering Woods", "Peaceful Meadow", "Cursed Swamp"],
+        "route": [
+          "Cursed Swamp",
+          "Whispering Woods",
+          "Peaceful Meadow",
+          "Cursed Swamp"
+        ],
         "pace": 20
       },
       "trades": [
@@ -1188,7 +1193,7 @@
       "tier": 0,
       "upgrade_cost": null,
       "storage_slots": 0,
-      "rest_bonus_hp_pct": 0.10,
+      "rest_bonus_hp_pct": 0.1,
       "description": "A modest campfire. Barely shelter."
     },
     {
@@ -1196,7 +1201,7 @@
       "tier": 1,
       "upgrade_cost": { "xp": 100, "items": ["Healing Herb", "Healing Herb"] },
       "storage_slots": 5,
-      "rest_bonus_hp_pct": 0.20,
+      "rest_bonus_hp_pct": 0.2,
       "description": "A crude shelter with a storage chest."
     },
     {
@@ -1212,7 +1217,7 @@
       "tier": 3,
       "upgrade_cost": { "xp": 800, "items": ["Steel Blade", "Shadow Cloak"] },
       "storage_slots": 20,
-      "rest_bonus_hp_pct": 0.50,
+      "rest_bonus_hp_pct": 0.5,
       "description": "A fortified base. Safe and well-stocked."
     }
   ],
@@ -1223,7 +1228,7 @@
     "return_home_hp_threshold": 0.4,
     "night_caution_hp_threshold": 0.7,
     "power_ratio_flee_threshold": 0.5,
-    "expedition_chance_on_advance": 0.30,
+    "expedition_chance_on_advance": 0.3,
     "expedition_chance_spontaneous": 0.03,
     "show_thinking_in_log": true,
     "llm_temperature": 0.7
@@ -1234,7 +1239,7 @@
     "night_start": 25,
     "night_mob_attack_mult": 1.3,
     "night_mob_hp_mult": 1.2,
-    "night_loot_chance_bonus": 0.10,
+    "night_loot_chance_bonus": 0.1,
     "fatigue_threshold": 30,
     "fatigue_debuff_value": 3,
     "fatigue_debuff_ticks": 8
@@ -1247,9 +1252,14 @@
       "attack": 8,
       "defense": 4,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 2},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 5, "defense_bonus": 2}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 2 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 5,
+          "defense_bonus": 2
+        }
       ],
       "loot": ["Iron Sword", "Health Potion"],
       "victory_xp": 100
@@ -1261,9 +1271,14 @@
       "attack": 12,
       "defense": 7,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 3},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 6, "defense_bonus": 3}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 3 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 6,
+          "defense_bonus": 3
+        }
       ],
       "loot": ["Steel Blade", "Forest Amulet"],
       "victory_xp": 180
@@ -1275,9 +1290,14 @@
       "attack": 16,
       "defense": 10,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 4},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 8, "defense_bonus": 4}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 4 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 8,
+          "defense_bonus": 4
+        }
       ],
       "loot": ["Shadow Cloak", "Iron Shield"],
       "victory_xp": 270
@@ -1289,9 +1309,14 @@
       "attack": 20,
       "defense": 13,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 5},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 10, "defense_bonus": 5}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 5 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 10,
+          "defense_bonus": 5
+        }
       ],
       "loot": ["Venom Dagger", "Swamp Boots"],
       "victory_xp": 370
@@ -1303,9 +1328,14 @@
       "attack": 25,
       "defense": 16,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 6},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 12, "defense_bonus": 6}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 6 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 12,
+          "defense_bonus": 6
+        }
       ],
       "loot": ["Flame Sword", "Dragon Scale Armor"],
       "victory_xp": 480
@@ -1317,9 +1347,14 @@
       "attack": 29,
       "defense": 20,
       "phases": [
-        {"threshold": 1.0, "strategy": "defend"},
-        {"threshold": 0.66, "strategy": "attack", "attack_bonus": 7},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 14, "defense_bonus": 7}
+        { "threshold": 1.0, "strategy": "defend" },
+        { "threshold": 0.66, "strategy": "attack", "attack_bonus": 7 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 14,
+          "defense_bonus": 7
+        }
       ],
       "loot": ["Prism Rapier", "Crystal Platemail"],
       "victory_xp": 600
@@ -1331,9 +1366,14 @@
       "attack": 30,
       "defense": 18,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 7},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 14, "defense_bonus": 7}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 7 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 14,
+          "defense_bonus": 7
+        }
       ],
       "loot": ["Coral Hauberk", "Shell Buckler"],
       "victory_xp": 600
@@ -1345,9 +1385,14 @@
       "attack": 34,
       "defense": 23,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 8},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 16, "defense_bonus": 8}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 8 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 16,
+          "defense_bonus": 8
+        }
       ],
       "loot": ["Scimitar of Sands", "Nomadic Silk"],
       "victory_xp": 730
@@ -1359,9 +1404,14 @@
       "attack": 35,
       "defense": 25,
       "phases": [
-        {"threshold": 1.0, "strategy": "defend"},
-        {"threshold": 0.66, "strategy": "attack", "attack_bonus": 8},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 16, "defense_bonus": 10}
+        { "threshold": 1.0, "strategy": "defend" },
+        { "threshold": 0.66, "strategy": "attack", "attack_bonus": 8 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 16,
+          "defense_bonus": 10
+        }
       ],
       "loot": ["Gear-Tooth Saw", "Golden Cog"],
       "victory_xp": 730
@@ -1373,9 +1423,14 @@
       "attack": 40,
       "defense": 28,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 10},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 20, "defense_bonus": 10}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 10 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 20,
+          "defense_bonus": 10
+        }
       ],
       "loot": ["Frost Axe", "Fur-Lined Tunic"],
       "victory_xp": 870
@@ -1387,9 +1442,14 @@
       "attack": 42,
       "defense": 26,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 10},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 20, "defense_bonus": 10}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 10 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 20,
+          "defense_bonus": 10
+        }
       ],
       "loot": ["Shadow Blade", "Umbral Vestment"],
       "victory_xp": 870
@@ -1401,9 +1461,14 @@
       "attack": 48,
       "defense": 32,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 12},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 24, "defense_bonus": 12}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 12 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 24,
+          "defense_bonus": 12
+        }
       ],
       "loot": ["Abyssal Dagger", "Bone Aegis"],
       "victory_xp": 1020
@@ -1415,9 +1480,14 @@
       "attack": 46,
       "defense": 35,
       "phases": [
-        {"threshold": 1.0, "strategy": "defend"},
-        {"threshold": 0.66, "strategy": "attack", "attack_bonus": 12},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 24, "defense_bonus": 12}
+        { "threshold": 1.0, "strategy": "defend" },
+        { "threshold": 0.66, "strategy": "attack", "attack_bonus": 12 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 24,
+          "defense_bonus": 12
+        }
       ],
       "loot": ["Molten Hammer", "Forge-Fire Plate"],
       "victory_xp": 1020
@@ -1429,9 +1499,14 @@
       "attack": 55,
       "defense": 38,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 14},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 28, "defense_bonus": 14}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 14 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 28,
+          "defense_bonus": 14
+        }
       ],
       "loot": ["Celestial Bow", "Angelic Robes"],
       "victory_xp": 1200
@@ -1443,9 +1518,14 @@
       "attack": 60,
       "defense": 40,
       "phases": [
-        {"threshold": 1.0, "strategy": "attack"},
-        {"threshold": 0.66, "strategy": "defend", "attack_bonus": 15},
-        {"threshold": 0.33, "strategy": "attack", "attack_bonus": 30, "defense_bonus": 15}
+        { "threshold": 1.0, "strategy": "attack" },
+        { "threshold": 0.66, "strategy": "defend", "attack_bonus": 15 },
+        {
+          "threshold": 0.33,
+          "strategy": "attack",
+          "attack_bonus": 30,
+          "defense_bonus": 15
+        }
       ],
       "loot": ["Void Reaver", "Void Shroud"],
       "victory_xp": 1500

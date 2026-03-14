@@ -300,6 +300,94 @@ def decide_trade_action(
     return None
 
 
+def evaluate_market_prices(
+    tokenizer,
+    model,
+    trade_history: list[dict],
+    merchant_summaries: list[dict],
+    world_context: str,
+) -> tuple[dict[str, float], str] | None:
+    """AI evaluates economy and returns (price_adjustments, market_news)."""
+
+    # Sanitize item/merchant names to prevent prompt injection
+    def _sanitize(name: str) -> str:
+        return re.sub(r"(ADJUST:|NEWS:)", "", name).strip()
+
+    # Format trade history
+    trade_lines = []
+    for t in trade_history[-8:]:
+        trade_lines.append(
+            f"tick {t['tick']}: player {t['action']} {_sanitize(t['item_name'])} "
+            f"from/to {_sanitize(t['merchant_name'])} for {t['price']}g"
+        )
+    trades_str = "\n".join(trade_lines) if trade_lines else "No recent trades."
+
+    # Format merchant stock
+    stock_lines = []
+    for m in merchant_summaries:
+        if m["items"]:
+            items_str = ", ".join(_sanitize(i) for i in m["items"])
+        else:
+            items_str = "empty"
+        name = _sanitize(m["name"])
+        stock_lines.append(
+            f"{name} ({m['role']}): {m['gold']}g gold, items: {items_str}"
+        )
+    stock_str = "\n".join(stock_lines)
+
+    # Collect all known item names from merchant inventories
+    known_items: set[str] = set()
+    for m in merchant_summaries:
+        for item_name in m["items"]:
+            known_items.add(item_name)
+
+    prompt = (
+        "You are the market oracle in a fantasy RPG. Analyze supply and demand.\n\n"
+        f"Recent trades:\n{trades_str}\n\n"
+        f"Merchant stock:\n{stock_str}\n\n"
+        f"World: {world_context}\n\n"
+        "Rules for pricing:\n"
+        "- HIGH DEMAND (item bought often, few merchants stock it): "
+        "raise price (1.1 to 2.0)\n"
+        "- LOW DEMAND (item not traded recently, many merchants stock it): "
+        "lower price (0.5 to 0.9)\n"
+        "- NORMAL (balanced): keep at 1.0 (omit from list)\n\n"
+        "Adjust prices for up to 3 items. Use this EXACT format:\n"
+        "ADJUST: item_name = multiplier\n"
+        "NEWS: one sentence about the market (under 80 chars, ending with period)"
+    )
+
+    result = _generate(tokenizer, model, prompt, max_tokens=120, temperature=0.7)
+    if not result:
+        return None
+
+    # Parse ADJUST lines
+    adjustments: dict[str, float] = {}
+    for match in re.finditer(r"ADJUST:\s*(.+?)\s*=\s*(-?\d*\.?\d+)", result):
+        item_name = match.group(1).strip()
+        try:
+            mult = float(match.group(2))
+        except ValueError:
+            continue
+        # Clamp to [0.5, 2.0] and validate item exists
+        mult = max(0.5, min(2.0, mult))
+        if item_name in known_items:
+            adjustments[item_name] = mult
+
+    # Parse NEWS line
+    news = ""
+    news_match = re.search(r"NEWS:\s*(.+)", result)
+    if news_match:
+        raw_news = news_match.group(1).strip()
+        truncated = _truncate_sentence(raw_news, max_len=80)
+        news = truncated if truncated else raw_news[:80]
+
+    if not adjustments and not news:
+        return None
+
+    return (adjustments, news)
+
+
 def generate_expedition_event(
     tokenizer, model, destination: str, progress: int, duration: int
 ) -> str | None:

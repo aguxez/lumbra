@@ -18,6 +18,7 @@ from config_loader import (
 )
 from economy import (
     EconomyState,
+    build_merchant_summaries,
     buy_price,
     fallback_trade_decision,
     get_trade_options,
@@ -164,9 +165,10 @@ def get_boss_defeat_text(boss_name: str, zone: str) -> str:
 def get_trade_action(
     state: GameState,
     merchant_state,
+    price_adjustments: dict[str, float] | None = None,
 ) -> tuple[str, str, str]:
     """Decide trade action via LLM or fallback. Returns (action, item_name, reason)."""
-    options = get_trade_options(state.character, merchant_state)
+    options = get_trade_options(state.character, merchant_state, price_adjustments)
     if ai_brain and tokenizer and model and len(options) > 1:
         result = ai_brain.decide_trade_action(
             tokenizer,
@@ -178,7 +180,7 @@ def get_trade_action(
         if result:
             action, item_name = result
             return (action, item_name, "AI decision")
-    return fallback_trade_decision(state.character, merchant_state)
+    return fallback_trade_decision(state.character, merchant_state, price_adjustments)
 
 
 def _intent_log(state: GameState, intent):
@@ -566,10 +568,11 @@ def tick_quest(state: GameState):
             )
             if has_shop:
                 assert merchant is not None and economy is not None
+                padj = economy.price_adjustments
                 # Snapshot gold before trade for conservation check
                 gold_before = total_system_gold(state.character, economy)
                 # AI-driven shop interaction
-                action, item_name, reason = get_trade_action(state, merchant)
+                action, item_name, reason = get_trade_action(state, merchant, padj)
                 if reason:
                     state.add_log(f"[Thinking] {reason}")
                 if action == "buy" and item_name:
@@ -578,9 +581,9 @@ def tick_quest(state: GameState):
                         (i for i in merchant.inventory if i.name == item_name),
                         None,
                     )
-                    price = buy_price(merchant_item) if merchant_item else 0
+                    price = buy_price(merchant_item, padj) if merchant_item else 0
                     state.add_logs(
-                        resolve_player_buy(state.character, merchant, item_name)
+                        resolve_player_buy(state.character, merchant, item_name, padj)
                     )
                     record_trade(
                         economy,
@@ -596,9 +599,9 @@ def tick_quest(state: GameState):
                         (i for i in state.character.inventory if i.name == item_name),
                         None,
                     )
-                    price = sell_price(player_item) if player_item else 0
+                    price = sell_price(player_item, padj) if player_item else 0
                     state.add_logs(
-                        resolve_player_sell(state.character, merchant, item_name)
+                        resolve_player_sell(state.character, merchant, item_name, padj)
                     )
                     record_trade(
                         economy,
@@ -609,7 +612,7 @@ def tick_quest(state: GameState):
                         price,
                     )
                 else:
-                    state.add_log("Nothing catches your eye at the shop.")
+                    state.add_log("[TRADE] Nothing catches your eye at the shop.")
                 # Gold conservation check (trade-only)
                 gold_after = total_system_gold(state.character, economy)
                 if gold_after != gold_before:
@@ -861,7 +864,28 @@ def main():
 
         # Economy: restock merchants periodically
         if economy:
-            state.add_logs(restock_merchants(economy, state.tick))
+            restock_logs = restock_merchants(economy, state.tick)
+            if restock_logs:
+                # Clear stale adjustments at the start of each restock cycle
+                economy.price_adjustments = {}
+                economy.market_news = ""
+            state.add_logs(restock_logs)
+            # AI-driven dynamic pricing on restock cycles
+            if restock_logs and ai_brain and tokenizer and model:
+                trade_dicts = [t.to_dict() for t in economy.trade_history]
+                summaries = build_merchant_summaries(economy)
+                night_str = "night" if state.is_night else "day"
+                world_ctx = f"{night_str}, tick {state.tick}"
+                ai_result = ai_brain.evaluate_market_prices(
+                    tokenizer, model, trade_dicts, summaries, world_ctx
+                )
+                if ai_result:
+                    adjustments, news = ai_result
+                    if adjustments:
+                        economy.price_adjustments = adjustments
+                    if news:
+                        economy.market_news = news
+                        state.add_log(f"[MARKET] {news}")
             # Persist economy state before save
             state.economy_data = economy.to_dict()
 
@@ -884,6 +908,9 @@ def main():
         )
         for msg in state.log:
             print(f"  {msg}")
+        trade_msgs = [m for m in state.log if "[TRADE]" in m]
+        if trade_msgs:
+            print(f"  >>> TRADES THIS TICK: {len(trade_msgs)} <<<")
 
         # Send to UI
         status = send_state(state)
