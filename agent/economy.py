@@ -104,7 +104,7 @@ class MerchantState:
 class TradeRecord:
     tick: int
     merchant_name: str
-    action: str  # "buy", "sell", "barter"
+    action: str  # "buy", "sell", "barter", "npc_buy", "npc_barter"
     item_name: str
     price: int
 
@@ -128,7 +128,37 @@ class TradeRecord:
         )
 
 
-TRADE_HISTORY_CAP = 20
+TRADE_HISTORY_CAP = 30
+
+NPC_TRADE_COOLDOWN = 5
+
+NPC_MAX_SPEND_RATIO = 0.6
+
+ROLE_NEED_RULES: dict[str, list[tuple[str, int, int]]] = {
+    # (item_type, threshold, priority)
+    "blacksmith": [("consumable", 1, 6), ("weapon", 3, 4), ("armor", 3, 4)],
+    "merchant": [("consumable", 2, 5), ("accessory", 1, 4), ("weapon", 1, 3)],
+    "sage": [("consumable", 2, 6), ("accessory", 1, 4)],
+    "wanderer": [("consumable", 1, 7)],
+}
+
+
+@dataclass
+class NPCNeed:
+    item_type: str
+    priority: int
+    max_price: int
+    reason: str
+
+
+@dataclass
+class NPCTrade:
+    buyer_name: str
+    seller_name: str
+    item_name: str
+    price: int  # 0 for barter
+    barter_item: str | None  # item given in exchange (barter only)
+    buyer_reason: str
 
 
 @dataclass
@@ -138,6 +168,7 @@ class EconomyState:
     trade_history: list[TradeRecord] = field(default_factory=list)
     price_adjustments: dict[str, float] = field(default_factory=dict)
     market_news: str = ""
+    npc_last_trade_tick: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -148,6 +179,7 @@ class EconomyState:
             "trade_history": [t.to_dict() for t in self.trade_history],
             "price_adjustments": self.price_adjustments,
             "market_news": self.market_news,
+            "npc_last_trade_tick": self.npc_last_trade_tick,
         }
 
     @classmethod
@@ -166,6 +198,7 @@ class EconomyState:
                 trade_history=trade_history,
                 price_adjustments=data.get("price_adjustments", {}),
                 market_news=data.get("market_news", ""),
+                npc_last_trade_tick=data.get("npc_last_trade_tick", {}),
             )
         except (KeyError, TypeError, ValueError) as e:
             logger.warning("Corrupt economy data, reinitializing: %s", e)
@@ -571,3 +604,158 @@ def total_system_gold(character: Character, economy: EconomyState) -> int:
     for ms in economy.merchant_states.values():
         total += ms.gold
     return total
+
+
+def fallback_npc_needs(merchant: MerchantState, role: str) -> list[NPCNeed]:
+    """Generate NPC needs using static role-based rules."""
+    rules = ROLE_NEED_RULES.get(role, [("consumable", 1, 5)])
+    needs: list[NPCNeed] = []
+    for item_type, threshold, priority in rules:
+        count = sum(1 for i in merchant.inventory if i.item_type == item_type)
+        if count < threshold:
+            max_price = int(merchant.gold * NPC_MAX_SPEND_RATIO)
+            reason = f"Running low on {item_type}s (have {count}, want {threshold})"
+            needs.append(NPCNeed(item_type, priority, max_price, reason))
+    return needs
+
+
+def fallback_negotiate(buyer_gold: int, fair_price: int) -> tuple[str, int]:
+    """Hardcoded negotiation: buyer offers 70% of fair price."""
+    offered = max(1, int(fair_price * 0.7))
+    floor = max(1, int(fair_price * 0.5))
+    if offered >= floor and buyer_gold >= offered:
+        return ("accept", offered)
+    return ("refuse", 0)
+
+
+def find_trade_candidates(
+    economy: EconomyState,
+    npc_configs: list[dict],
+    npc_world: dict[str, dict],
+    tick: int,
+    needs_by_npc: dict[str, list[NPCNeed]],
+) -> list[tuple[str, str, str, NPCNeed]]:
+    """Find NPC pairs where one has what the other needs.
+
+    Returns (buyer_name, seller_name, item_name, need) sorted by priority.
+    Each NPC appears in at most one candidate (greedy assignment).
+    """
+    # Group NPCs by current zone
+    zone_npcs: dict[str, list[str]] = {}
+    for npc in npc_configs:
+        name = npc["name"]
+        entry = npc_world.get(name, {})
+        zone = entry.get("current_zone", npc.get("zone", ""))
+        zone_npcs.setdefault(zone, []).append(name)
+
+    raw_candidates: list[tuple[str, str, str, NPCNeed]] = []
+
+    for _zone, names in zone_npcs.items():
+        if len(names) < 2:
+            continue
+        for buyer_name in names:
+            # Skip if on cooldown
+            last = economy.npc_last_trade_tick.get(buyer_name, 0)
+            if tick - last < NPC_TRADE_COOLDOWN:
+                continue
+            buyer_needs = needs_by_npc.get(buyer_name, [])
+            if not buyer_needs:
+                continue
+            buyer_ms = economy.merchant_states.get(buyer_name)
+            if not buyer_ms or buyer_ms.gold <= 0:
+                continue
+            for seller_name in names:
+                if seller_name == buyer_name:
+                    continue
+                last_s = economy.npc_last_trade_tick.get(seller_name, 0)
+                if tick - last_s < NPC_TRADE_COOLDOWN:
+                    continue
+                seller_ms = economy.merchant_states.get(seller_name)
+                if not seller_ms or not seller_ms.inventory:
+                    continue
+                for need in buyer_needs:
+                    for item in seller_ms.inventory:
+                        if item.item_type == need.item_type:
+                            price = base_price(item)
+                            if price <= need.max_price and price <= buyer_ms.gold:
+                                raw_candidates.append(
+                                    (buyer_name, seller_name, item.name, need)
+                                )
+                                break
+                    else:
+                        continue
+                    break
+
+    # Sort by priority (highest first) and greedily assign
+    raw_candidates.sort(key=lambda c: c[3].priority, reverse=True)
+    used: set[str] = set()
+    result: list[tuple[str, str, str, NPCNeed]] = []
+    for buyer, seller, item_name, need in raw_candidates:
+        if buyer not in used and seller not in used:
+            result.append((buyer, seller, item_name, need))
+            used.add(buyer)
+            used.add(seller)
+    return result
+
+
+def execute_npc_trade(economy: EconomyState, trade: NPCTrade, tick: int) -> list[str]:
+    """Execute an NPC-to-NPC trade: move item and gold, record history."""
+    buyer_ms = economy.merchant_states.get(trade.buyer_name)
+    seller_ms = economy.merchant_states.get(trade.seller_name)
+    if not buyer_ms or not seller_ms:
+        return []
+
+    # Find item in seller inventory
+    item_idx = next(
+        (i for i, it in enumerate(seller_ms.inventory) if it.name == trade.item_name),
+        None,
+    )
+    if item_idx is None:
+        return []
+
+    logs: list[str] = []
+    item = seller_ms.inventory.pop(item_idx)
+
+    if trade.barter_item:
+        # Barter: swap items
+        barter_idx = next(
+            (
+                i
+                for i, it in enumerate(buyer_ms.inventory)
+                if it.name == trade.barter_item
+            ),
+            None,
+        )
+        if barter_idx is None:
+            # Buyer doesn't have the barter item — abort trade, return item to seller
+            seller_ms.inventory.append(item)
+            return []
+        barter_item = buyer_ms.inventory.pop(barter_idx)
+        seller_ms.inventory.append(barter_item)
+        buyer_ms.inventory.append(item)
+        action = "npc_barter"
+        logs.append(
+            f"[NPC TRADE] {trade.buyer_name} traded {trade.barter_item} "
+            f"to {trade.seller_name} for {trade.item_name} "
+            f"({trade.buyer_reason})"
+        )
+    else:
+        # Gold purchase
+        buyer_ms.gold -= trade.price
+        seller_ms.gold += trade.price
+        buyer_ms.inventory.append(item)
+        action = "npc_buy"
+        logs.append(
+            f"[NPC TRADE] {trade.buyer_name} bought {trade.item_name} "
+            f"from {trade.seller_name} for {trade.price}g "
+            f"({trade.buyer_reason})"
+        )
+
+    # Record in trade history
+    record_trade(economy, tick, trade.seller_name, action, trade.item_name, trade.price)
+
+    # Update cooldowns
+    economy.npc_last_trade_tick[trade.buyer_name] = tick
+    economy.npc_last_trade_tick[trade.seller_name] = tick
+
+    return logs

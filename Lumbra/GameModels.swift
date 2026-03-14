@@ -192,6 +192,7 @@ struct EconomyData: Codable {
   let tradeHistory: [TradeRecord]
   let priceAdjustments: [String: Double]
   let marketNews: String
+  let npcLastTradeTick: [String: Int]?
 
   enum CodingKeys: String, CodingKey {
     case priceAdjustments = "price_adjustments"
@@ -199,6 +200,7 @@ struct EconomyData: Codable {
     case lastRestockTick = "last_restock_tick"
     case tradeHistory = "trade_history"
     case marketNews = "market_news"
+    case npcLastTradeTick = "npc_last_trade_tick"
   }
 }
 

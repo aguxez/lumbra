@@ -38,7 +38,7 @@ from game_state import (
     Quest,
     equip_or_stash,
 )
-from npc_autonomy import tick_npc_movement
+from npc_autonomy import tick_npc_movement, tick_npc_trades
 from player_intent import build_state_summary, generate_intent
 from world import (
     BOSS_DEFEAT_FALLBACKS,
@@ -845,6 +845,15 @@ def main():
         # tick_location reads is_night to decide exploring↔at_base transitions.
         tick_day_night(state)
         tick_npc_movement(state)
+        if economy:
+            npc_trade_logs = tick_npc_trades(
+                state,
+                economy,
+                tokenizer=tokenizer if ai_brain else None,
+                model=model if ai_brain else None,
+                ai_brain_mod=ai_brain,
+            )
+            state.add_logs(npc_trade_logs)
         tick_location(state)
 
         if state.location == "at_base":
@@ -876,10 +885,10 @@ def main():
                 # Clear stale adjustments at the start of each restock cycle
                 economy.price_adjustments = {}
                 economy.market_news = ""
-                total_gold = sum(ms.gold for ms in economy.merchant_states.values())
-                n_items = sum(
-                    len(ms.inventory) for ms in economy.merchant_states.values()
-                )
+                total_gold, n_items = 0, 0
+                for ms in economy.merchant_states.values():
+                    total_gold += ms.gold
+                    n_items += len(ms.inventory)
                 state.add_log(
                     f"[RESTOCK] Cycle complete. Merchants hold"
                     f" {total_gold}g total. {n_items} items restocked."

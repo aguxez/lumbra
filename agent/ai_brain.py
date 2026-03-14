@@ -399,3 +399,157 @@ def generate_expedition_event(
         "ending with a period)."
     )
     return _generate_text(tokenizer, model, prompt)
+
+
+def evaluate_npc_needs(
+    tokenizer,
+    model,
+    npc_name: str,
+    role: str,
+    zone: str,
+    inventory_summary: str,
+    gold: int,
+    is_night: bool,
+    nearby_npcs: list[str],
+) -> list[tuple[str, int, str]] | None:
+    """Ask the LLM what an NPC needs. Returns list of (item_type, priority, reason)."""
+    time_str = "night" if is_night else "day"
+    nearby = ", ".join(nearby_npcs) if nearby_npcs else "no one"
+    prompt = (
+        f"You are {npc_name}, a {role} in the {zone}. It is {time_str}.\n"
+        f"Your inventory: {inventory_summary}\n"
+        f"Your gold: {gold}g\n"
+        f"Nearby NPCs: {nearby}\n"
+        "What do you need? Pick 1-2 from: "
+        "consumable, weapon, armor, accessory, shield.\n"
+        "Reply with numbered lines, each: TYPE PRIORITY REASON\n"
+        "PRIORITY is 1-10 (10=urgent). REASON is a short phrase.\n"
+        "Example:\n1. consumable 8 need healing supplies for the dangerous road\n"
+        "2. weapon 5 looking for a better blade"
+    )
+
+    result = _generate(tokenizer, model, prompt, max_tokens=80, temperature=0.8)
+    if not result:
+        return None
+
+    valid_types = {"consumable", "weapon", "armor", "accessory", "shield"}
+    needs: list[tuple[str, int, str]] = []
+    for line in result.strip().split("\n"):
+        # Match: optional number/dot, then type, priority, reason
+        m = re.match(r"\d*\.?\s*(\w+)\s+(\d+)\s+(.*)", line.strip())
+        if m:
+            item_type = m.group(1).lower()
+            if item_type in valid_types:
+                priority = max(1, min(10, int(m.group(2))))
+                reason = m.group(3).strip()[:80]
+                needs.append((item_type, priority, reason))
+    return needs if needs else None
+
+
+def npc_make_offer(
+    tokenizer,
+    model,
+    buyer_name: str,
+    buyer_role: str,
+    zone: str,
+    buyer_gold: int,
+    need_reason: str,
+    seller_name: str,
+    item_name: str,
+    fair_price: int,
+) -> tuple[str, int, str] | None:
+    """Buyer NPC proposes a deal or skips.
+
+    Returns ("offer", price, reason) or ("skip", 0, reason) or None.
+    """
+    prompt = (
+        f"You are {buyer_name}, a {buyer_role} in the {zone}.\n"
+        f"{seller_name} has: {item_name}.\n"
+        f"You need it because: {need_reason}\n"
+        f"You have {buyer_gold}g. The fair price is ~{fair_price}g.\n"
+        "Make an offer or skip.\n"
+        "Reply: OFFER <price>g REASON <why>\n"
+        "Or: SKIP REASON <why>"
+    )
+
+    result = _generate(tokenizer, model, prompt, max_tokens=60, temperature=0.7)
+    if not result:
+        return None
+
+    upper = result.upper()
+    if "SKIP" in upper:
+        reason_match = re.search(r"REASON\s+(.+)", result, re.IGNORECASE)
+        reason = (
+            reason_match.group(1).strip()[:80] if reason_match else "not interested"
+        )
+        return ("skip", 0, reason)
+
+    if "OFFER" in upper:
+        price_match = re.search(r"OFFER\s+(\d+)", result, re.IGNORECASE)
+        reason_match = re.search(r"REASON\s+(.+)", result, re.IGNORECASE)
+        if price_match:
+            price = int(price_match.group(1))
+            price = max(1, min(price, buyer_gold))
+            reason = reason_match.group(1).strip()[:80] if reason_match else "fair deal"
+            return ("offer", price, reason)
+
+    return None
+
+
+def npc_respond_offer(
+    tokenizer,
+    model,
+    seller_name: str,
+    seller_role: str,
+    zone: str,
+    seller_gold: int,
+    seller_item_count: int,
+    buyer_name: str,
+    item_name: str,
+    offered_price: int,
+    fair_price: int,
+) -> tuple[str, int, str] | None:
+    """Seller NPC responds to an offer.
+
+    Returns ("accept", price, reason) or ("counter", price, reason)
+    or ("refuse", 0, reason) or None.
+    """
+    prompt = (
+        f"You are {seller_name}, a {seller_role} in the {zone}.\n"
+        f"{buyer_name} offers {offered_price}g for your {item_name}.\n"
+        f"The fair price is ~{fair_price}g. You have {seller_gold}g "
+        f"and {seller_item_count} items.\n"
+        "Reply: ACCEPT\n"
+        "Or: COUNTER <price>g REASON <why>\n"
+        "Or: REFUSE REASON <why>"
+    )
+
+    result = _generate(tokenizer, model, prompt, max_tokens=60, temperature=0.7)
+    if not result:
+        return None
+
+    upper = result.upper()
+    if "ACCEPT" in upper:
+        return ("accept", offered_price, "deal accepted")
+
+    if "COUNTER" in upper:
+        price_match = re.search(r"COUNTER\s+(\d+)", result, re.IGNORECASE)
+        reason_match = re.search(r"REASON\s+(.+)", result, re.IGNORECASE)
+        if price_match:
+            price = int(price_match.group(1))
+            price = max(1, price)
+            reason = (
+                reason_match.group(1).strip()[:80] if reason_match else "counter offer"
+            )
+            return ("counter", price, reason)
+
+    if "REFUSE" in upper:
+        reason_match = re.search(r"REASON\s+(.+)", result, re.IGNORECASE)
+        reason = (
+            reason_match.group(1).strip()[:80]
+            if reason_match
+            else "not worth parting with it"
+        )
+        return ("refuse", 0, reason)
+
+    return None
