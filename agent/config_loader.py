@@ -75,6 +75,7 @@ _BOSSES_BY_ZONE: dict[str, dict] = {b["zone"]: b for b in BOSSES}
 _BOSSES_BY_NAME: dict[str, dict] = {b["name"]: b for b in BOSSES}
 
 NPCS: list[dict] = _CONFIG.get("npcs", [])
+_NPCS_BY_NAME: dict[str, dict] = {n["name"]: n for n in NPCS}
 EXPEDITION_DESTINATIONS: list[dict] = _CONFIG.get("expedition_destinations", [])
 BASE_TIERS: list[dict] = _CONFIG.get("base_tiers", [])
 _BASE_TIERS_BY_TIER: dict[int, dict] = {t["tier"]: t for t in BASE_TIERS}
@@ -88,6 +89,10 @@ def get_base_tier(tier: int) -> dict | None:
 
 def get_next_base_tier(current_tier: int) -> dict | None:
     return _BASE_TIERS_BY_TIER.get(current_tier + 1)
+
+
+def get_npc(name: str) -> dict | None:
+    return _NPCS_BY_NAME.get(name)
 
 
 def get_npcs_for_zone(zone_name: str) -> list[dict]:

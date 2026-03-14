@@ -572,6 +572,11 @@ def tick_quest(state: GameState):
                 # Snapshot gold before trade for conservation check
                 gold_before = total_system_gold(state.character, economy)
                 # AI-driven shop interaction
+                if padj:
+                    state.add_log(
+                        f"[MARKET] {len(padj)} price adjustment(s) active"
+                        f" at {encounter.npc_name}'s shop."
+                    )
                 action, item_name, reason = get_trade_action(state, merchant, padj)
                 if reason:
                     state.add_log(f"[Thinking] {reason}")
@@ -612,7 +617,9 @@ def tick_quest(state: GameState):
                         price,
                     )
                 else:
-                    state.add_log("[TRADE] Nothing catches your eye at the shop.")
+                    state.add_log(
+                        f"[TRADE] Browsed {encounter.npc_name}'s shop — {reason}"
+                    )
                 # Gold conservation check (trade-only)
                 gold_after = total_system_gold(state.character, economy)
                 if gold_after != gold_before:
@@ -869,6 +876,14 @@ def main():
                 # Clear stale adjustments at the start of each restock cycle
                 economy.price_adjustments = {}
                 economy.market_news = ""
+                total_gold = sum(ms.gold for ms in economy.merchant_states.values())
+                n_items = sum(
+                    len(ms.inventory) for ms in economy.merchant_states.values()
+                )
+                state.add_log(
+                    f"[RESTOCK] Cycle complete. Merchants hold"
+                    f" {total_gold}g total. {n_items} items restocked."
+                )
             state.add_logs(restock_logs)
             # AI-driven dynamic pricing on restock cycles
             if restock_logs and ai_brain and tokenizer and model:
@@ -883,9 +898,22 @@ def main():
                     adjustments, news = ai_result
                     if adjustments:
                         economy.price_adjustments = adjustments
+                        items_str = ", ".join(
+                            f"{k} x{v:.1f}" for k, v in adjustments.items()
+                        )
+                        state.add_log(
+                            f"[MARKET] {len(adjustments)} price"
+                            f" adjustment(s) set: {items_str}"
+                        )
+                    else:
+                        state.add_log("[MARKET] Prices evaluated — no changes needed.")
                     if news:
                         economy.market_news = news
                         state.add_log(f"[MARKET] {news}")
+                else:
+                    state.add_log("[MARKET] Prices evaluated — no changes needed.")
+            elif restock_logs:
+                state.add_log("[MARKET] No price oracle — base rates in effect.")
             # Persist economy state before save
             state.economy_data = economy.to_dict()
 

@@ -100,6 +100,10 @@ struct MainWindowView: View {
                 }
               }
 
+              if let economy = gameState.economy {
+                MarketPulseView(economy: economy)
+              }
+
               EquipmentSection(equipment: gameState.character.equipment)
                 .padding(Theme.cardPadding)
                 .background(
@@ -189,6 +193,9 @@ struct MainWindowView: View {
                           .strokeBorder(Theme.cardBorder, lineWidth: 1)
                       )
                   )
+              }
+              if let economy = gameState.economy {
+                EconomyCardView(economy: economy)
               }
             }
             .padding(12)

@@ -7,7 +7,7 @@ import random
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from config_loader import ITEMS_BY_NAME, NPCS, get_item
+from config_loader import ITEMS_BY_NAME, NPCS, get_item, get_npc
 from game_state import InventoryItem, equip_or_stash
 
 if TYPE_CHECKING:
@@ -58,9 +58,13 @@ class MerchantState:
     inventory: list[InventoryItem] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        npc = get_npc(self.npc_name)
+        role = npc.get("role", "wanderer") if npc else "wanderer"
+        gold_cap = ROLE_GOLD_CAP.get(role, 100)
         return {
             "npc_name": self.npc_name,
             "gold": self.gold,
+            "gold_cap": gold_cap,
             "inventory": [
                 {
                     "name": i.name,
@@ -284,7 +288,7 @@ def restock_merchants(economy: EconomyState, tick: int) -> list[str]:
     logs: list[str] = []
 
     for ms in economy.merchant_states.values():
-        npc = next((n for n in NPCS if n["name"] == ms.npc_name), None)
+        npc = get_npc(ms.npc_name)
         if not npc:
             continue
 
@@ -548,7 +552,7 @@ def build_merchant_summaries(economy: EconomyState) -> list[dict[str, object]]:
     """Build merchant summary dicts for AI market evaluation."""
     summaries: list[dict[str, object]] = []
     for ms in economy.merchant_states.values():
-        npc = next((n for n in NPCS if n["name"] == ms.npc_name), None)
+        npc = get_npc(ms.npc_name)
         role = npc.get("role", "wanderer") if npc else "wanderer"
         summaries.append(
             {
