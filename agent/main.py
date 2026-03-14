@@ -1,4 +1,5 @@
 import json
+import logging
 import random
 import time
 
@@ -17,20 +18,24 @@ from config_loader import (
 )
 from economy import (
     EconomyState,
+    buy_price,
     fallback_trade_decision,
     get_trade_options,
     load_or_init_economy,
+    record_trade,
     resolve_player_buy,
     resolve_player_sell,
     restock_merchants,
+    sell_price,
+    total_system_gold,
 )
 from game_state import (
-    MAX_CONSUMABLE_PER_TYPE,
     ActiveBuff,
     Combat,
     GameState,
     InventoryItem,
     Quest,
+    equip_or_stash,
 )
 from npc_autonomy import tick_npc_movement
 from player_intent import build_state_summary, generate_intent
@@ -51,69 +56,7 @@ from world import (
     spawn_boss,
 )
 
-
-def equip_or_stash(character, item: InventoryItem) -> list[str]:
-    """Route an item to equipment slots or inventory. Returns log messages."""
-    logs = []
-
-    if item.item_type == "weapon":
-        current = character.equipped_weapon
-        if not current:
-            character.equipped_weapon = item
-            logs.append(f"Equipped {item.name} as weapon! (+{item.attack} ATK)")
-        elif item.attack > current.attack:
-            logs.append(
-                f"Replaced {current.name} with {item.name}! (+{item.attack} ATK)"
-            )
-            character.equipped_weapon = item
-        else:
-            logs.append(f"Discarded {item.name} (weaker than {current.name}).")
-        return logs
-
-    if item.item_type in ("armor", "shield"):
-        current = character.equipped_armor
-        if not current:
-            character.equipped_armor = item
-            logs.append(f"Equipped {item.name} as armor! (+{item.defense} DEF)")
-        elif item.defense > current.defense:
-            logs.append(
-                f"Replaced {current.name} with {item.name}! (+{item.defense} DEF)"
-            )
-            character.equipped_armor = item
-        else:
-            logs.append(f"Discarded {item.name} (weaker than {current.name}).")
-        return logs
-
-    if item.item_type == "accessory":
-        current = character.equipped_accessory
-        if not current:
-            character.equipped_accessory = item
-            stat = f"+{item.attack} ATK" if item.attack else f"+{item.defense} DEF"
-            logs.append(f"Equipped {item.name} as accessory! ({stat})")
-        else:
-            new_power = item.attack + item.defense
-            old_power = current.attack + current.defense
-            if new_power > old_power:
-                logs.append(f"Replaced {current.name} with {item.name}!")
-                character.equipped_accessory = item
-            else:
-                logs.append(f"Discarded {item.name} (weaker than {current.name}).")
-        return logs
-
-    # Consumable or other item → inventory with cap
-    if item.item_type == "consumable":
-        count = sum(1 for i in character.inventory if i.name == item.name)
-        if count >= MAX_CONSUMABLE_PER_TYPE:
-            logs.append(
-                f"Inventory full for {item.name} "
-                f"(max {MAX_CONSUMABLE_PER_TYPE}). Discarded."
-            )
-            return logs
-
-    character.inventory.append(item)
-    logs.append(f"Stashed {item.name} in inventory.")
-    return logs
-
+logger = logging.getLogger(__name__)
 
 SERVER_URL = "http://127.0.0.1:8234"
 TICK_COMBAT = 6
@@ -622,24 +565,78 @@ def tick_quest(state: GameState):
                 and encounter.interaction_type == "trade"
             )
             if has_shop:
-                assert merchant is not None
+                assert merchant is not None and economy is not None
+                # Snapshot gold before trade for conservation check
+                gold_before = total_system_gold(state.character, economy)
                 # AI-driven shop interaction
                 action, item_name, reason = get_trade_action(state, merchant)
                 if reason:
                     state.add_log(f"[Thinking] {reason}")
                 if action == "buy" and item_name:
+                    # Look up price before resolution moves the item
+                    merchant_item = next(
+                        (i for i in merchant.inventory if i.name == item_name),
+                        None,
+                    )
+                    price = buy_price(merchant_item) if merchant_item else 0
                     state.add_logs(
                         resolve_player_buy(state.character, merchant, item_name)
                     )
+                    record_trade(
+                        economy,
+                        state.tick,
+                        encounter.npc_name,
+                        "buy",
+                        item_name,
+                        price,
+                    )
                 elif action == "sell" and item_name:
+                    # Look up price before resolution moves the item
+                    player_item = next(
+                        (i for i in state.character.inventory if i.name == item_name),
+                        None,
+                    )
+                    price = sell_price(player_item) if player_item else 0
                     state.add_logs(
                         resolve_player_sell(state.character, merchant, item_name)
                     )
+                    record_trade(
+                        economy,
+                        state.tick,
+                        encounter.npc_name,
+                        "sell",
+                        item_name,
+                        price,
+                    )
                 else:
                     state.add_log("Nothing catches your eye at the shop.")
+                # Gold conservation check (trade-only)
+                gold_after = total_system_gold(state.character, economy)
+                if gold_after != gold_before:
+                    logger.error(
+                        "Gold conservation violated: %d -> %d (tick %d)",
+                        gold_before,
+                        gold_after,
+                        state.tick,
+                    )
             else:
                 # Legacy barter / buff / lore interaction
-                state.add_logs(resolve_npc_interaction(state, encounter))
+                interaction_logs = resolve_npc_interaction(state, encounter)
+                state.add_logs(interaction_logs)
+                # Record barter trades in unified history
+                if (
+                    economy
+                    and encounter.interaction_type == "trade"
+                    and encounter.offer_item
+                ):
+                    record_trade(
+                        economy,
+                        state.tick,
+                        encounter.npc_name,
+                        "barter",
+                        encounter.offer_item,
+                        0,
+                    )
         else:
             state.npc_encounter = None
             event = get_exploration_text(state.zone)

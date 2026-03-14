@@ -263,17 +263,18 @@ def decide_trade_action(
     model,
     state_summary: str,
     gold: int,
-    options: list[tuple[str, str, int]],
+    options: list[tuple[str, str, int, bool]],
 ) -> tuple[str, str] | None:
     """Ask the LLM to pick a trade action (buy/sell/skip).
 
-    options: list of (action, item_name, price) tuples.
+    options: list of (action, item_name, price, is_upgrade) tuples.
     Returns (action, item_name) or None on failure.
     """
     numbered_lines = []
-    for i, (action, item_name, price) in enumerate(options):
+    for i, (action, item_name, price, is_upgrade) in enumerate(options):
         if action == "buy":
-            numbered_lines.append(f"{i + 1}. buy {item_name} ({price}g)")
+            tag = " [UPGRADE]" if is_upgrade else ""
+            numbered_lines.append(f"{i + 1}. buy {item_name} ({price}g){tag}")
         elif action == "sell":
             numbered_lines.append(f"{i + 1}. sell {item_name} (for {price}g)")
         else:
@@ -294,7 +295,7 @@ def decide_trade_action(
         first_digit = re.search(r"[" + "".join(valid_digits) + r"]", result)
         if first_digit:
             idx = int(first_digit.group()) - 1
-            action, item_name, _ = options[idx]
+            action, item_name, _, _ = options[idx]
             return (action, item_name)
     return None
 

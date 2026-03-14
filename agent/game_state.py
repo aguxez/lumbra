@@ -102,6 +102,76 @@ class InventoryItem:
 MAX_CONSUMABLE_PER_TYPE = 4
 
 
+def equip_or_stash(character: "Character", item: InventoryItem) -> list[str]:
+    """Route an item to equipment slots or inventory. Returns log messages."""
+    logs: list[str] = []
+
+    if item.item_type == "weapon":
+        current = character.equipped_weapon
+        if not current:
+            character.equipped_weapon = item
+            logs.append(f"Equipped {item.name} as weapon! (+{item.attack} ATK)")
+        elif item.attack > current.attack:
+            character.equipped_weapon = item
+            character.inventory.append(current)
+            logs.append(
+                f"Replaced {current.name} with {item.name}! "
+                f"(+{item.attack} ATK) Stashed {current.name}."
+            )
+        else:
+            logs.append(f"Discarded {item.name} (weaker than {current.name}).")
+        return logs
+
+    if item.item_type in ("armor", "shield"):
+        current = character.equipped_armor
+        if not current:
+            character.equipped_armor = item
+            logs.append(f"Equipped {item.name} as armor! (+{item.defense} DEF)")
+        elif item.defense > current.defense:
+            character.equipped_armor = item
+            character.inventory.append(current)
+            logs.append(
+                f"Replaced {current.name} with {item.name}! "
+                f"(+{item.defense} DEF) Stashed {current.name}."
+            )
+        else:
+            logs.append(f"Discarded {item.name} (weaker than {current.name}).")
+        return logs
+
+    if item.item_type == "accessory":
+        current = character.equipped_accessory
+        if not current:
+            stat = f"+{item.attack} ATK" if item.attack else f"+{item.defense} DEF"
+            character.equipped_accessory = item
+            logs.append(f"Equipped {item.name} as accessory! ({stat})")
+        else:
+            new_power = item.attack + item.defense
+            old_power = current.attack + current.defense
+            if new_power > old_power:
+                character.equipped_accessory = item
+                character.inventory.append(current)
+                logs.append(
+                    f"Replaced {current.name} with {item.name}! Stashed {current.name}."
+                )
+            else:
+                logs.append(f"Discarded {item.name} (weaker than {current.name}).")
+        return logs
+
+    # Consumable or other item → inventory with cap
+    if item.item_type == "consumable":
+        count = sum(1 for i in character.inventory if i.name == item.name)
+        if count >= MAX_CONSUMABLE_PER_TYPE:
+            logs.append(
+                f"Inventory full for {item.name} "
+                f"(max {MAX_CONSUMABLE_PER_TYPE}). Discarded."
+            )
+            return logs
+
+    character.inventory.append(item)
+    logs.append(f"Stashed {item.name} in inventory.")
+    return logs
+
+
 def _item_to_dict(item: InventoryItem) -> dict:
     return {
         "name": item.name,
