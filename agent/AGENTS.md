@@ -14,6 +14,7 @@ Python game engine that runs the autonomous RPG game loop. Handles tick-based si
 | `game_state.py` | All dataclasses (`GameState`, `Character`, `Enemy`, `Quest`, `Combat`, `Expedition`, `NPCEncounter`, `Base`, etc.); save/load from `savegame.json` |
 | `combat.py` | Turn-based combat resolution: damage calculation, critical hits, flee, defend, auto-potion, stat growth |
 | `world.py` | World systems: encounter rolls, quest generation, NPC interactions (trade/buff/lore), expedition creation and resolution, loot |
+| `economy.py` | Economy system: merchant shops, pricing, trade options, buy/sell resolution, gold caps, trade history |
 | `ai_brain.py` | Optional LLM integration (Qwen3-0.6B): combat strategy, quest generation, exploration text, NPC dialogue, expedition events |
 | `config_loader.py` | Loads `game_config.json` at import time; provides lookup functions for zones, mobs, items, NPCs, expeditions, base tiers, day/night config |
 | `game_config.json` | All game content data: 50+ items, 35+ mobs across 10 tiers, 15 zones, 10 NPCs, 5 expedition destinations, 4 base tiers, day/night settings |
@@ -30,7 +31,7 @@ Python game engine that runs the autonomous RPG game loop. Handles tick-based si
 - All state is persisted to `savegame.json` via atomic write (tmp + rename)
 - The AI brain (LLM) is optional — all functions have hardcoded fallbacks
 - `config_loader.py` loads config at module import time; changes require restart
-- Circular import: `world.py` imports `equip_or_stash` from `main.py` inside `resolve_npc_interaction`
+- `equip_or_stash` lives in `game_state.py` (no circular imports)
 
 ### Testing Requirements
 ```bash
