@@ -1,7 +1,4 @@
-<!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-03-13 | Updated: 2026-03-13 -->
-
-# Lumbra
+# Lumbra (SwiftUI App)
 
 ## Purpose
 Native macOS SwiftUI application that visualizes the RPG game state. Listens on `localhost:8234` for JSON updates from the Python agent and renders character stats, combat, quests, NPCs, expeditions, equipment, inventory, base, and an event log in a dark-themed two-column layout with a menu bar extra showing HP.
@@ -20,22 +17,20 @@ Native macOS SwiftUI application that visualizes the RPG game state. Listens on 
 | `Theme.swift` | Design tokens: colors (dark theme), font scale, spacing constants |
 | `Info.plist` | Sets `LSUIElement=true` (app runs as agent/menu bar app, no dock icon) |
 
-## For AI Agents
-
-### Working In This Directory
+## Working In This Directory
 - This is a read-only UI — all game logic lives in `agent/`
 - `GameModels.swift` must stay in sync with the JSON schema produced by `agent/game_state.py:GameState.to_dict()`
 - Uses `snake_case` to `camelCase` mapping via `CodingKeys` enums (not `keyDecodingStrategy`)
 - The app is a menu bar app (`LSUIElement=true`) with a window that can be shown/hidden
 - No external Swift packages — uses only Apple frameworks (SwiftUI, Combine, Network)
 
-### Testing Requirements
+## Testing Requirements
 ```bash
 xcodebuild build -project Lumbra.xcodeproj -scheme Lumbra
 swiftlint lint --strict
 ```
 
-### Common Patterns
+## Common Patterns
 - Dark theme with card-based layout; all colors/fonts via `Theme` enum
 - HP bars with color thresholds: green (>50%), orange (>25%), red
 - `DisclosureGroup` for collapsible sections (equipment, inventory, storage, expeditions)
@@ -53,5 +48,3 @@ swiftlint lint --strict
 - SwiftUI — declarative UI framework
 - Combine — `AnyCancellable` for disconnect timer
 - Network (`NWListener`, `NWConnection`) — raw TCP server
-
-<!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
