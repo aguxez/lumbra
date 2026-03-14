@@ -226,7 +226,8 @@ struct EconomyCardView: View {
         } else {
           VStack(alignment: .leading, spacing: 4) {
             ForEach(
-              economy.priceAdjustments.sorted(by: { $0.key < $1.key }), id: \.key
+              economy.priceAdjustments.sorted(by: { $0.key < $1.key }),
+              id: \.key
             ) { item, mult in
               let style = adjustmentStyle(mult)
               HStack {
@@ -260,32 +261,7 @@ struct EconomyCardView: View {
         } else {
           VStack(alignment: .leading, spacing: 4) {
             ForEach(economy.tradeHistory.suffix(10).reversed()) { trade in
-              let isBuy = trade.action == "buy"
-              HStack(spacing: 6) {
-                Text("T\(trade.tick)")
-                  .font(Theme.fontTiny.monospacedDigit())
-                  .foregroundColor(Theme.mutedText)
-                  .frame(width: 36, alignment: .leading)
-                Text(trade.action.uppercased())
-                  .font(Theme.fontTiny.bold())
-                  .foregroundColor(isBuy ? .green : .orange)
-                  .padding(.horizontal, 4)
-                  .padding(.vertical, 1)
-                  .background(
-                    (isBuy ? Color.green : Color.orange).opacity(0.15)
-                  )
-                  .cornerRadius(3)
-                Text(trade.itemName)
-                  .font(Theme.fontSmall)
-                  .foregroundColor(Theme.bodyText)
-                  .lineLimit(1)
-                Spacer()
-                if trade.price > 0 {
-                  Text(isBuy ? "-\(trade.price)g" : "+\(trade.price)g")
-                    .font(Theme.fontSmall.monospacedDigit())
-                    .foregroundColor(isBuy ? .red : .green)
-                }
-              }
+              TradeRowView(trade: trade)
             }
           }
         }
@@ -308,9 +284,57 @@ struct EconomyCardView: View {
   }
 }
 
+// MARK: - Trade Row
+
+private struct TradeRowView: View {
+  let trade: TradeRecord
+
+  private var isNpcTrade: Bool { trade.action.hasPrefix("npc_") }
+  private var isBuy: Bool {
+    trade.action == "buy" || trade.action == "npc_buy"
+  }
+  private var isBarter: Bool { trade.action == "npc_barter" }
+  private var badgeColor: Color {
+    if isBarter { return .purple }
+    if isNpcTrade { return .teal }
+    if isBuy { return .green }
+    return .orange
+  }
+
+  var body: some View {
+    HStack(spacing: 6) {
+      Text("T\(trade.tick)")
+        .font(Theme.fontTiny.monospacedDigit())
+        .foregroundColor(Theme.mutedText)
+        .frame(width: 36, alignment: .leading)
+      Text(trade.action.uppercased())
+        .font(Theme.fontTiny.bold())
+        .foregroundColor(badgeColor)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
+        .background(badgeColor.opacity(0.15))
+        .cornerRadius(3)
+      Text(trade.itemName)
+        .font(Theme.fontSmall)
+        .foregroundColor(Theme.bodyText)
+        .lineLimit(1)
+      Spacer()
+      if isBarter {
+        Text("swap")
+          .font(Theme.fontSmall.monospacedDigit())
+          .foregroundColor(.purple)
+      } else if trade.price > 0 {
+        Text(isBuy ? "-\(trade.price)g" : "+\(trade.price)g")
+          .font(Theme.fontSmall.monospacedDigit())
+          .foregroundColor(isBuy ? .red : .green)
+      }
+    }
+  }
+}
+
 // MARK: - Merchant Row
 
-struct MerchantRowView: View {
+private struct MerchantRowView: View {
   let merchant: MerchantStateData
 
   var body: some View {
@@ -344,6 +368,8 @@ struct EventLogView: View {
 
   // Log prefix contract: prefixes like [TRADE], [COMBAT], etc. are defined in agent/main.py
   private func entryColor(_ entry: String) -> Color {
+    if entry.hasPrefix("[NPC TRADE]") { return .teal }
+    if entry.hasPrefix("[NPC]") { return .teal.opacity(0.7) }
     if entry.hasPrefix("[TRADE]") { return .yellow }
     if entry.hasPrefix("[MARKET]") { return .green }
     if entry.hasPrefix("[RESTOCK]") { return .orange }
@@ -378,6 +404,96 @@ struct EventLogView: View {
   }
 }
 
+// MARK: - Expedition Panel
+
+struct ExpeditionPanelView: View {
+  let expeditions: [ExpeditionState]
+  @State private var isExpanded = true
+
+  var body: some View {
+    DisclosureGroup(isExpanded: $isExpanded) {
+      VStack(spacing: 8) {
+        ForEach(expeditions) { exp in
+          VStack(alignment: .leading, spacing: 4) {
+            HStack {
+              Text(exp.destination)
+                .font(Theme.fontSmall.bold())
+                .foregroundColor(Theme.headerText)
+              Spacer()
+              if let risk = exp.riskLevel {
+                Text("Risk \(risk)")
+                  .font(Theme.fontTiny)
+                  .foregroundColor(Self.riskColor(risk))
+              }
+            }
+
+            GeometryReader { geo in
+              ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 3)
+                  .fill(Color.white.opacity(0.1))
+                RoundedRectangle(cornerRadius: 3)
+                  .fill(Color.indigo.opacity(0.7))
+                  .frame(
+                    width: geo.size.width
+                      * Double(exp.progress)
+                      / Double(max(1, exp.duration))
+                  )
+                  .animation(
+                    .easeInOut(duration: 0.4), value: exp.progress)
+              }
+            }
+            .frame(height: 5)
+
+            HStack {
+              Text("\(exp.progress)/\(exp.duration)")
+                .font(Theme.fontTiny.monospacedDigit())
+                .foregroundColor(Theme.mutedText)
+              Spacer()
+              if let reward = exp.rewardXp {
+                Text("+\(reward) XP")
+                  .font(Theme.fontTiny)
+                  .foregroundColor(.indigo)
+              }
+            }
+
+            if let events = exp.events, let lastEvent = events.last {
+              Text(lastEvent)
+                .font(Theme.fontTiny)
+                .foregroundColor(Theme.mutedText)
+                .italic()
+                .lineLimit(2)
+            }
+          }
+          .padding(10)
+          .background(
+            RoundedRectangle(cornerRadius: 8)
+              .fill(Color.indigo.opacity(0.06))
+          )
+        }
+      }
+    } label: {
+      HStack(spacing: 4) {
+        Image(systemName: "map")
+          .font(Theme.fontSmall)
+          .foregroundColor(.indigo)
+        Text("Expeditions (\(expeditions.count))")
+          .font(Theme.fontSmall.bold())
+          .foregroundColor(.indigo)
+      }
+    }
+    .tint(Theme.bodyText)
+  }
+
+  private static func riskColor(_ risk: Int) -> Color {
+    switch risk {
+    case 1: return .green
+    case 2: return .yellow
+    case 3: return .orange
+    case 4...5: return .red
+    default: return .secondary
+    }
+  }
+}
 // MARK: - Inventory Section
 
 struct InventorySection: View {

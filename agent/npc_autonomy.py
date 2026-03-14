@@ -2,9 +2,28 @@
 
 from __future__ import annotations
 
+import logging
 import random
+from typing import TYPE_CHECKING
 
-from config_loader import NPCS, ZONES, get_zone
+from config_loader import NPCS, ZONES, get_npc, get_zone
+from economy import (
+    NPC_MAX_SPEND_RATIO,
+    NPC_TRADE_COOLDOWN,
+    NPCNeed,
+    NPCTrade,
+    base_price,
+    execute_npc_trade,
+    fallback_negotiate,
+    fallback_npc_needs,
+    find_trade_candidates,
+)
+
+if TYPE_CHECKING:
+    from economy import EconomyState
+    from game_state import GameState
+
+logger = logging.getLogger(__name__)
 
 # Zone name → danger level lookup
 # Safe: ZONES is immutable after config load
@@ -133,3 +152,209 @@ def scale_buff(buff: dict, affinity: int) -> int:
     if bonus_per_tier and affinity > 0:
         base += (affinity // 30) * bonus_per_tier
     return base
+
+
+def tick_npc_trades(
+    state: GameState,
+    economy: EconomyState,
+    tokenizer=None,
+    model=None,
+    ai_brain_mod=None,
+) -> list[str]:
+    """Run NPC-to-NPC trading for co-located NPCs each tick."""
+    logs: list[str] = []
+
+    # Early exit: skip if all NPCs are still on cooldown
+    if all(
+        state.tick - economy.npc_last_trade_tick.get(npc["name"], 0)
+        < NPC_TRADE_COOLDOWN
+        for npc in NPCS
+    ):
+        return logs
+
+    has_ai = tokenizer is not None and model is not None and ai_brain_mod is not None
+
+    # 1. Compute needs per NPC
+    needs_by_npc: dict[str, list[NPCNeed]] = {}
+    for npc_cfg in NPCS:
+        name = npc_cfg["name"]
+        role = npc_cfg.get("role", "wanderer")
+        ms = economy.merchant_states.get(name)
+        if not ms:
+            continue
+
+        ai_needs: list[NPCNeed] | None = None
+        if has_ai:
+            assert ai_brain_mod is not None
+            try:
+                # Build inventory summary
+                type_counts: dict[str, int] = {}
+                for item in ms.inventory:
+                    type_counts[item.item_type] = type_counts.get(item.item_type, 0) + 1
+                inv_summary = ", ".join(
+                    f"{count} {t}" for t, count in type_counts.items()
+                )
+                if not inv_summary:
+                    inv_summary = "empty"
+
+                # Find nearby NPCs
+                entry = state.npc_world.get(name, {})
+                current_zone = entry.get("current_zone", npc_cfg.get("zone", ""))
+                nearby: list[str] = []
+                for other in NPCS:
+                    if other["name"] == name:
+                        continue
+                    other_entry = state.npc_world.get(other["name"], {})
+                    other_zone = other_entry.get("current_zone", other.get("zone", ""))
+                    if other_zone == current_zone:
+                        nearby.append(other["name"])
+
+                result = ai_brain_mod.evaluate_npc_needs(
+                    tokenizer,
+                    model,
+                    name,
+                    role,
+                    current_zone,
+                    inv_summary,
+                    ms.gold,
+                    state.is_night,
+                    nearby,
+                )
+                if result:
+                    ai_needs = [
+                        NPCNeed(
+                            item_type=it,
+                            priority=pri,
+                            max_price=int(ms.gold * NPC_MAX_SPEND_RATIO),
+                            reason=reason,
+                        )
+                        for it, pri, reason in result
+                    ]
+            except Exception:
+                logger.debug("AI needs evaluation failed for %s", name, exc_info=True)
+
+        if ai_needs:
+            needs_by_npc[name] = ai_needs
+        else:
+            fallback = fallback_npc_needs(ms, role)
+            if fallback:
+                needs_by_npc[name] = fallback
+
+    if not needs_by_npc:
+        return logs
+
+    # 2. Find trade candidates
+    candidates = find_trade_candidates(
+        economy, NPCS, state.npc_world, state.tick, needs_by_npc
+    )
+
+    # 3. Negotiate and execute each candidate
+    for buyer_name, seller_name, item_name, need in candidates:
+        buyer_ms = economy.merchant_states.get(buyer_name)
+        seller_ms = economy.merchant_states.get(seller_name)
+        if not buyer_ms or not seller_ms:
+            continue
+
+        # Find the item to get its fair price
+        item = next((i for i in seller_ms.inventory if i.name == item_name), None)
+        if not item:
+            continue
+        fair = base_price(item)
+
+        # Negotiate
+        final_action = "refuse"
+        final_price = 0
+        reason = need.reason
+
+        if has_ai:
+            assert ai_brain_mod is not None
+            try:
+                buyer_npc = get_npc(buyer_name)
+                buyer_role = (
+                    buyer_npc.get("role", "wanderer") if buyer_npc else "wanderer"
+                )
+                entry = state.npc_world.get(buyer_name, {})
+                zone = entry.get("current_zone", "")
+
+                offer_result = ai_brain_mod.npc_make_offer(
+                    tokenizer,
+                    model,
+                    buyer_name,
+                    buyer_role,
+                    zone,
+                    buyer_ms.gold,
+                    need.reason,
+                    seller_name,
+                    item_name,
+                    fair,
+                )
+                if offer_result:
+                    action, price, offer_reason = offer_result
+                    if action == "skip":
+                        logs.append(
+                            f"[NPC] {buyer_name} decided not to buy "
+                            f"{item_name} from {seller_name} ({offer_reason})"
+                        )
+                        continue
+                    if action == "offer" and price > 0:
+                        seller_npc = get_npc(seller_name)
+                        seller_role = (
+                            seller_npc.get("role", "wanderer")
+                            if seller_npc
+                            else "wanderer"
+                        )
+                        response = ai_brain_mod.npc_respond_offer(
+                            tokenizer,
+                            model,
+                            seller_name,
+                            seller_role,
+                            zone,
+                            seller_ms.gold,
+                            len(seller_ms.inventory),
+                            buyer_name,
+                            item_name,
+                            price,
+                            fair,
+                        )
+                        if response:
+                            final_action, final_price, reason = response
+                            if final_action == "counter" and final_price > 0:
+                                # Accept counter if buyer can afford
+                                if buyer_ms.gold >= final_price:
+                                    final_action = "accept"
+                                else:
+                                    final_action = "refuse"
+                                    reason = "can't afford counter price"
+                            elif final_action == "accept":
+                                final_price = price
+                else:
+                    # LLM returned None, fall back
+                    final_action, final_price = fallback_negotiate(buyer_ms.gold, fair)
+            except Exception:
+                logger.debug(
+                    "AI negotiation failed for %s -> %s",
+                    buyer_name,
+                    seller_name,
+                    exc_info=True,
+                )
+                final_action, final_price = fallback_negotiate(buyer_ms.gold, fair)
+        else:
+            final_action, final_price = fallback_negotiate(buyer_ms.gold, fair)
+
+        if final_action == "accept" and final_price > 0:
+            trade = NPCTrade(
+                buyer_name=buyer_name,
+                seller_name=seller_name,
+                item_name=item_name,
+                price=final_price,
+                barter_item=None,
+                buyer_reason=reason,
+            )
+            logs.extend(execute_npc_trade(economy, trade, state.tick))
+        else:
+            logs.append(
+                f"[NPC] {seller_name} refused to sell {item_name} "
+                f"to {buyer_name} ({reason})"
+            )
+
+    return logs
