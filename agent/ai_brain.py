@@ -258,6 +258,47 @@ def generate_boss_defeat_text(
     return _generate_text(tokenizer, model, prompt, max_tokens=60, temperature=0.8)
 
 
+def decide_trade_action(
+    tokenizer,
+    model,
+    state_summary: str,
+    gold: int,
+    options: list[tuple[str, str, int]],
+) -> tuple[str, str] | None:
+    """Ask the LLM to pick a trade action (buy/sell/skip).
+
+    options: list of (action, item_name, price) tuples.
+    Returns (action, item_name) or None on failure.
+    """
+    numbered_lines = []
+    for i, (action, item_name, price) in enumerate(options):
+        if action == "buy":
+            numbered_lines.append(f"{i + 1}. buy {item_name} ({price}g)")
+        elif action == "sell":
+            numbered_lines.append(f"{i + 1}. sell {item_name} (for {price}g)")
+        else:
+            numbered_lines.append(f"{i + 1}. skip (save gold)")
+    numbered = "\n".join(numbered_lines)
+
+    prompt = (
+        f"You are an RPG adventurer visiting a merchant's shop.\n"
+        f"Your status: {state_summary}\n"
+        f"Your gold: {gold}\n"
+        f"Choose ONE action:\n{numbered}\n"
+        f"Reply with just the number."
+    )
+
+    result = _generate(tokenizer, model, prompt, max_tokens=40, temperature=0.7)
+    if result:
+        valid_digits = set(str(i + 1) for i in range(len(options)))
+        first_digit = re.search(r"[" + "".join(valid_digits) + r"]", result)
+        if first_digit:
+            idx = int(first_digit.group()) - 1
+            action, item_name, _ = options[idx]
+            return (action, item_name)
+    return None
+
+
 def generate_expedition_event(
     tokenizer, model, destination: str, progress: int, duration: int
 ) -> str | None:

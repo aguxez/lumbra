@@ -122,6 +122,7 @@ class Character:
     attack: int = 8
     defense: int = 5
     xp: int = 0
+    gold: int = 0
     inventory: list[InventoryItem] = field(default_factory=list)
     equipped_weapon: InventoryItem | None = None
     equipped_armor: InventoryItem | None = None
@@ -157,6 +158,7 @@ class Character:
             "attack": self.attack,
             "defense": self.defense,
             "xp": self.xp,
+            "gold": self.gold,
             "equipment": {
                 "weapon": _item_to_dict(self.equipped_weapon)
                 if self.equipped_weapon
@@ -275,6 +277,7 @@ class GameState:
     was_night: bool = False
     bosses_defeated: dict[str, bool] = field(default_factory=dict)
     pending_boss: bool = False
+    economy_data: dict = field(default_factory=dict)
     _current_intent: dict | None = field(default=None, repr=False)
 
     @property
@@ -331,12 +334,17 @@ class GameState:
             "cycle_length": self.cycle_length,
             "night_start": self.night_start,
             "player_intent": self._current_intent,
+            "economy": self.economy_data if self.economy_data else {},
         }
 
     def add_log(self, message: str):
         self.log.append(message)
         if len(self.log) > 50:
             self.log = self.log[-50:]
+
+    def add_logs(self, messages: list[str]):
+        for msg in messages:
+            self.add_log(msg)
 
     def save(self, path: str = SAVE_PATH):
         char = self.character
@@ -347,6 +355,7 @@ class GameState:
             "attack": char.attack,
             "defense": char.defense,
             "xp": char.xp,
+            "gold": char.gold,
             "inventory": [asdict(i) for i in char.inventory],
             "equipped_weapon": asdict(char.equipped_weapon)
             if char.equipped_weapon
@@ -385,6 +394,7 @@ class GameState:
             "was_night": self.was_night,
             "bosses_defeated": self.bosses_defeated,
             "pending_boss": self.pending_boss,
+            "economy_data": self.economy_data,
         }
         tmp = path + ".tmp"
         with open(tmp, "w") as f:
@@ -439,8 +449,11 @@ class GameState:
         char_data.pop("armor", None)
         char_data.pop("equipment", None)
 
+        gold = char_data.pop("gold", 0)
+
         character = Character(
             **char_data,
+            gold=gold,
             inventory=inventory,
             equipped_weapon=equipped_weapon,
             equipped_armor=equipped_armor,
@@ -507,5 +520,6 @@ class GameState:
             was_night=data.get("was_night", False),
             bosses_defeated=data.get("bosses_defeated", {}),
             pending_boss=data.get("pending_boss", False),
+            economy_data=data.get("economy_data", {}),
         )
         return state

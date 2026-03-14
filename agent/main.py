@@ -15,6 +15,15 @@ from config_loader import (
     get_next_base_tier,
     get_zone,
 )
+from economy import (
+    EconomyState,
+    fallback_trade_decision,
+    get_trade_options,
+    load_or_init_economy,
+    resolve_player_buy,
+    resolve_player_sell,
+    restock_merchants,
+)
 from game_state import (
     MAX_CONSUMABLE_PER_TYPE,
     ActiveBuff,
@@ -24,7 +33,7 @@ from game_state import (
     Quest,
 )
 from npc_autonomy import tick_npc_movement
-from player_intent import generate_intent
+from player_intent import build_state_summary, generate_intent
 from world import (
     BOSS_DEFEAT_FALLBACKS,
     BOSS_TAUNT_FALLBACKS,
@@ -117,6 +126,9 @@ ai_brain = None
 tokenizer = None
 model = None
 
+# Economy state (initialized in main)
+economy: EconomyState | None = None
+
 
 def try_load_ai():
     global ai_brain, tokenizer, model
@@ -204,6 +216,26 @@ def get_boss_defeat_text(boss_name: str, zone: str) -> str:
         if text:
             return text
     return random.choice(BOSS_DEFEAT_FALLBACKS)
+
+
+def get_trade_action(
+    state: GameState,
+    merchant_state,
+) -> tuple[str, str, str]:
+    """Decide trade action via LLM or fallback. Returns (action, item_name, reason)."""
+    options = get_trade_options(state.character, merchant_state)
+    if ai_brain and tokenizer and model and len(options) > 1:
+        result = ai_brain.decide_trade_action(
+            tokenizer,
+            model,
+            build_state_summary(state),
+            state.character.gold,
+            options,
+        )
+        if result:
+            action, item_name = result
+            return (action, item_name, "AI decision")
+    return fallback_trade_decision(state.character, merchant_state)
 
 
 def _intent_log(state: GameState, intent):
@@ -486,9 +518,16 @@ def tick_combat(state: GameState):
 
         # Victory
         is_boss = combat.enemy.is_boss
-        growth_logs = apply_stat_growth(state.character)
-        for msg in growth_logs:
-            state.add_log(msg)
+        state.add_logs(apply_stat_growth(state.character))
+
+        # Gold drop
+        zone_data = get_zone(state.zone)
+        zone_danger = zone_data["danger"] if zone_data else 1
+        gold_drop = random.randint(3, 8) + zone_danger * 3
+        if is_boss:
+            gold_drop *= 5
+        state.character.gold += gold_drop
+        state.add_log(f"Found {gold_drop} gold!")
 
         # Quest progress
         if state.quest and state.quest.target == combat.enemy.name:
@@ -511,8 +550,7 @@ def tick_combat(state: GameState):
                 for loot_item in random.sample(boss_loot, loot_count):
                     item = InventoryItem.from_config(loot_item)
                     state.add_log(f"Boss loot: {item.name} ({item.rarity})!")
-                    for msg in equip_or_stash(state.character, item):
-                        state.add_log(msg)
+                    state.add_logs(equip_or_stash(state.character, item))
 
             # Advance zone
             new_zone = pick_next_zone(state.zone, state.character.effective_attack)
@@ -530,8 +568,7 @@ def tick_combat(state: GameState):
             if loot:
                 item = InventoryItem.from_config(loot)
                 state.add_log(f"Loot: {item.name} ({item.rarity})!")
-                for msg in equip_or_stash(state.character, item):
-                    state.add_log(msg)
+                state.add_logs(equip_or_stash(state.character, item))
 
         state.combat = None
 
@@ -575,10 +612,34 @@ def tick_quest(state: GameState):
             state.add_log(f"You meet {encounter.npc_name} ({encounter.npc_role}).")
             state.add_log(f'"{encounter.dialogue}"')
 
-            # Resolve the interaction
-            interaction_logs = resolve_npc_interaction(state, encounter)
-            for msg in interaction_logs:
-                state.add_log(msg)
+            # Check if this NPC has a shop (economy-driven trading)
+            merchant = (
+                economy.merchant_states.get(encounter.npc_name) if economy else None
+            )
+            has_shop = (
+                merchant
+                and merchant.inventory
+                and encounter.interaction_type == "trade"
+            )
+            if has_shop:
+                assert merchant is not None
+                # AI-driven shop interaction
+                action, item_name, reason = get_trade_action(state, merchant)
+                if reason:
+                    state.add_log(f"[Thinking] {reason}")
+                if action == "buy" and item_name:
+                    state.add_logs(
+                        resolve_player_buy(state.character, merchant, item_name)
+                    )
+                elif action == "sell" and item_name:
+                    state.add_logs(
+                        resolve_player_sell(state.character, merchant, item_name)
+                    )
+                else:
+                    state.add_log("Nothing catches your eye at the shop.")
+            else:
+                # Legacy barter / buff / lore interaction
+                state.add_logs(resolve_npc_interaction(state, encounter))
         else:
             state.npc_encounter = None
             event = get_exploration_text(state.zone)
@@ -605,7 +666,11 @@ def tick_quest_complete(state: GameState):
     quest = state.quest
     assert quest is not None
     state.character.xp += quest.reward_xp
-    state.add_log(f"Quest complete! Gained {quest.reward_xp} XP.")
+    gold_reward = quest.reward_xp // 2
+    state.character.gold += gold_reward
+    state.add_log(
+        f"Quest complete! Gained {quest.reward_xp} XP and {gold_reward} gold."
+    )
 
     if quest.reward_item:
         item_data = ITEMS_BY_NAME.get(quest.reward_item)
@@ -614,8 +679,7 @@ def tick_quest_complete(state: GameState):
         else:
             item = InventoryItem(name=quest.reward_item, rarity="uncommon")
         state.add_log(f"Received: {quest.reward_item}!")
-        for msg in equip_or_stash(state.character, item):
-            state.add_log(msg)
+        state.add_logs(equip_or_stash(state.character, item))
 
     state.quest = None
 
@@ -700,17 +764,17 @@ def tick_expeditions(state: GameState):
 
         # Check completion
         if exp.is_complete:
-            logs = resolve_expedition(exp)
-            for msg in logs:
-                state.add_log(msg)
-            # Grant XP and loot
+            state.add_logs(resolve_expedition(exp))
+            # Grant XP, gold, and loot
             state.character.xp += exp.reward_xp
+            gold_payout = exp.risk_level * 15 + random.randint(5, 20)
+            state.character.gold += gold_payout
+            state.add_log(f"Expedition gold: {gold_payout}g")
             for item_name in exp.rewards:
                 item_data = ITEMS_BY_NAME.get(item_name)
                 if item_data:
                     item = InventoryItem.from_config(item_data)
-                    for msg in equip_or_stash(state.character, item):
-                        state.add_log(msg)
+                    state.add_logs(equip_or_stash(state.character, item))
 
     # Clean up finished expeditions (keep last 5 completed for history)
     state.expeditions = [e for e in state.expeditions if e.status == "active"]
@@ -753,12 +817,15 @@ def send_state(state: GameState):
 
 
 def main():
+    global economy
     try_load_ai()
 
     state = GameState.load()
+    economy = load_or_init_economy(state.economy_data)
     char = state.character
     print(
-        f"Game loaded: tick={state.tick}, zone={state.zone}, hp={char.hp}/{char.max_hp}"
+        f"Game loaded: tick={state.tick}, zone={state.zone}, "
+        f"hp={char.hp}/{char.max_hp}, gold={char.gold}"
     )
 
     while True:
@@ -795,6 +862,12 @@ def main():
         maybe_launch_expedition(state)
         maybe_upgrade_base(state)
 
+        # Economy: restock merchants periodically
+        if economy:
+            state.add_logs(restock_merchants(economy, state.tick))
+            # Persist economy state before save
+            state.economy_data = economy.to_dict()
+
         # Clear NPC encounter if we're in combat now
         if state.combat:
             state.npc_encounter = None
@@ -809,6 +882,7 @@ def main():
             f"atk={char.effective_attack} "
             f"def={char.effective_defense} "
             f"xp={char.xp} "
+            f"gold={char.gold} "
             f"base={state.base.name}"
         )
         for msg in state.log:

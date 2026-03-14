@@ -44,7 +44,6 @@ struct GameStateResponse: Codable {
   let npcsInZone: [NPCPresence]?
   let bossesDefeated: [String: Bool]?
   let totalBosses: Int?
-
   enum CodingKeys: String, CodingKey {
     case tick, timestamp, character, zone, quest, combat, expeditions, log
     case base, location
@@ -73,6 +72,7 @@ struct CharacterState: Codable {
   let attack: Int
   let defense: Int
   let experience: Int
+  let gold: Int?
   let equipment: EquipmentState
   let inventory: [InventoryItem]
   let effectiveAttack: Int?
@@ -80,7 +80,7 @@ struct CharacterState: Codable {
   let activeBuffs: [ActiveBuffState]?
 
   enum CodingKeys: String, CodingKey {
-    case name, attack, defense, equipment, inventory
+    case name, attack, defense, equipment, inventory, gold
     case hitPoints = "hp"
     case maxHitPoints = "max_hp"
     case experience = "xp"
