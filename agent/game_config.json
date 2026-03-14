@@ -761,6 +761,7 @@
     {
       "name": "Old Farmer Gregor",
       "role": "merchant",
+      "base_gold": 200,
       "zone": "Peaceful Meadow",
       "movement": {
         "pattern": "home"
@@ -787,6 +788,7 @@
     {
       "name": "Meadow Sage Elira",
       "role": "sage",
+      "base_gold": 80,
       "zone": "Peaceful Meadow",
       "movement": {
         "pattern": "home"
@@ -804,6 +806,7 @@
     {
       "name": "Ranger Thalia",
       "role": "wanderer",
+      "base_gold": 50,
       "zone": "Whispering Woods",
       "movement": {
         "pattern": "wander",
@@ -836,6 +839,7 @@
     {
       "name": "Blacksmith Duran",
       "role": "blacksmith",
+      "base_gold": 150,
       "zone": "Whispering Woods",
       "movement": {
         "pattern": "route",
@@ -869,6 +873,7 @@
     {
       "name": "Hermit Malachar",
       "role": "sage",
+      "base_gold": 100,
       "zone": "Dark Forest",
       "movement": {
         "pattern": "pilgrimage",
@@ -899,6 +904,7 @@
     {
       "name": "Ghost Merchant Vex",
       "role": "merchant",
+      "base_gold": 300,
       "zone": "Dark Forest",
       "movement": {
         "pattern": "wander",
@@ -933,6 +939,7 @@
     {
       "name": "Witch Doctor Zara",
       "role": "sage",
+      "base_gold": 120,
       "zone": "Cursed Swamp",
       "movement": {
         "pattern": "route",
@@ -957,6 +964,7 @@
     {
       "name": "Swamp Trader Bogden",
       "role": "merchant",
+      "base_gold": 250,
       "zone": "Cursed Swamp",
       "movement": {
         "pattern": "route",
@@ -985,6 +993,7 @@
     {
       "name": "Dragonsworn Kael",
       "role": "blacksmith",
+      "base_gold": 400,
       "zone": "Dragon's Peak",
       "movement": {
         "pattern": "home"
@@ -1011,6 +1020,7 @@
     {
       "name": "Oracle Seraphine",
       "role": "sage",
+      "base_gold": 200,
       "zone": "Dragon's Peak",
       "movement": {
         "pattern": "pilgrimage",

@@ -40,6 +40,7 @@ def build_state_summary(state) -> str:
         f"HP {char.hp}/{char.max_hp} ({hp_pct}%), "
         f"ATK {char.effective_attack}, DEF {char.effective_defense}, "
         f"XP {char.xp}, zone {state.zone}, {night}, "
+        f"gold {char.gold}, "
         f"fatigue {state.ticks_exploring} ticks, base tier {state.base.tier}"
     )
 

@@ -108,6 +108,9 @@ struct CharacterCardView: View {
           StatRowView(icon: "shield.fill", label: "DEF", value: "\(character.defense)")
         }
         StatRowView(icon: "star.fill", label: "XP", value: "\(character.experience)")
+        if let gold = character.gold {
+          StatRowView(icon: "dollarsign.circle.fill", label: "Gold", value: "\(gold)")
+        }
       }
     }
     .padding(Theme.cardPadding)
