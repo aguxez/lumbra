@@ -1,6 +1,3 @@
-<!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-03-13 | Updated: 2026-03-13 -->
-
 # agent
 
 ## Purpose
@@ -22,9 +19,7 @@ Python game engine that runs the autonomous RPG game loop. Handles tick-based si
 | `savegame.json` | Persistent game state (auto-generated at runtime) |
 | `uv.lock` | Locked dependency versions |
 
-## For AI Agents
-
-### Working In This Directory
+## Working In This Directory
 - Run with `uv run python main.py` from this directory
 - The game loop in `main.py` ticks continuously with varying intervals (6-15s depending on activity)
 - `game_config.json` is the single source of truth for all game content — modify it to add items, mobs, zones, NPCs, etc.
@@ -33,14 +28,14 @@ Python game engine that runs the autonomous RPG game loop. Handles tick-based si
 - `config_loader.py` loads config at module import time; changes require restart
 - `equip_or_stash` lives in `game_state.py` (no circular imports)
 
-### Testing Requirements
+## Testing Requirements
 ```bash
 uv run ruff format --check .
 uv run ruff check .
 uv run basedpyright .
 ```
 
-### Common Patterns
+## Common Patterns
 - Dataclasses with `to_dict()` methods for JSON serialization
 - Functions return `list[str]` of log messages (appended to `state.log`)
 - Combat uses dice rolls (1-6): roll 6 = critical (2x damage), roll 1 = miss
@@ -60,5 +55,3 @@ uv run basedpyright .
 - `transformers` + `torch` — Qwen3-0.6B local inference (optional)
 - `requests` — HTTP POST to SwiftUI app
 - `ruff` + `basedpyright` — dev linting/type-checking
-
-<!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

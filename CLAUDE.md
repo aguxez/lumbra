@@ -1,5 +1,3 @@
-<!-- Generated: 2026-03-13 | Updated: 2026-03-13 -->
-
 # Lumbra
 
 ## Purpose
@@ -15,24 +13,22 @@ An AI-driven idle RPG that autonomously explores a fantasy world, fights monster
 
 | Directory | Purpose |
 |-----------|---------|
-| `agent/` | Python game engine: AI brain, combat, world simulation, config (see `agent/AGENTS.md`) |
-| `Lumbra/` | SwiftUI macOS app: views, models, networking, theming (see `Lumbra/AGENTS.md`) |
+| `agent/` | Python game engine: AI brain, combat, world simulation, config |
+| `Lumbra/` | SwiftUI macOS app: views, models, networking, theming |
 | `Lumbra.xcodeproj/` | Xcode project configuration and Swift Package Manager settings |
 
-## For AI Agents
-
-### Working In This Directory
+## Working In This Repo
 - The agent and UI communicate via HTTP POST to `localhost:8234`
 - The Python agent is the source of truth for game state; the Swift app is a read-only visualizer
 - `game_config.json` in `agent/` defines all game content (items, mobs, zones, NPCs, expeditions, base tiers, day/night)
 - Changes to the JSON schema in `game_config.json` must be reflected in both `agent/game_state.py` (Python dataclasses) and `Lumbra/GameModels.swift` (Swift Codable structs)
 
-### Testing Requirements
+## Testing Requirements
 - Python: `uv run ruff format --check .`, `uv run ruff check .`, `uv run basedpyright .` (from `agent/`)
 - Swift: `swiftlint lint --strict`
 - Build: `xcodebuild build -project Lumbra.xcodeproj -scheme Lumbra`
 
-### Architecture
+## Architecture
 ```
 [Python Agent] --HTTP POST (JSON)--> [SwiftUI App]
     |                                      |
@@ -49,5 +45,3 @@ An AI-driven idle RPG that autonomously explores a fantasy world, fights monster
 - Python 3.10+, PyTorch, Hugging Face Transformers (Qwen/Qwen3-0.6B)
 - SwiftUI, Combine, Network framework (Apple)
 - Ruff, basedpyright (Python linting); SwiftLint (Swift linting)
-
-<!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
