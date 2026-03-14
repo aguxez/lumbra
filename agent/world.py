@@ -13,7 +13,14 @@ from config_loader import (
     get_mobs_for_zone,
     get_npcs_in_zone,
 )
-from game_state import ActiveBuff, Enemy, Expedition, InventoryItem, NPCEncounter
+from game_state import (
+    ActiveBuff,
+    Enemy,
+    Expedition,
+    InventoryItem,
+    NPCEncounter,
+    equip_or_stash,
+)
 from npc_autonomy import get_available_trades, scale_buff
 
 BOSS_TAUNT_FALLBACKS = [
@@ -270,9 +277,7 @@ def _find_and_remove_item(character, item_name: str) -> bool:
 
 
 def resolve_npc_interaction(state, encounter: NPCEncounter) -> list[str]:
-    from main import equip_or_stash
-
-    logs = []
+    logs: list[str] = []
     if encounter.interaction_type == "trade":
         # Check if player has the requested item (or request is None = free gift)
         if encounter.request_item:
