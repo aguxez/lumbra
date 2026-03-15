@@ -132,6 +132,8 @@ TRADE_HISTORY_CAP = 30
 
 NPC_TRADE_COOLDOWN = 5
 
+NPC_NEEDS_COOLDOWN = 10
+
 NPC_MAX_SPEND_RATIO = 0.6
 
 ROLE_NEED_RULES: dict[str, list[tuple[str, int, int]]] = {
@@ -169,6 +171,8 @@ class EconomyState:
     price_adjustments: dict[str, float] = field(default_factory=dict)
     market_news: str = ""
     npc_last_trade_tick: dict[str, int] = field(default_factory=dict)
+    npc_last_needs_tick: dict[str, int] = field(default_factory=dict)
+    npc_cached_needs: dict[str, list[dict]] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -180,6 +184,8 @@ class EconomyState:
             "price_adjustments": self.price_adjustments,
             "market_news": self.market_news,
             "npc_last_trade_tick": self.npc_last_trade_tick,
+            "npc_last_needs_tick": self.npc_last_needs_tick,
+            "npc_cached_needs": self.npc_cached_needs,
         }
 
     @classmethod
@@ -199,6 +205,8 @@ class EconomyState:
                 price_adjustments=data.get("price_adjustments", {}),
                 market_news=data.get("market_news", ""),
                 npc_last_trade_tick=data.get("npc_last_trade_tick", {}),
+                npc_last_needs_tick=data.get("npc_last_needs_tick", {}),
+                npc_cached_needs=data.get("npc_cached_needs", {}),
             )
         except (KeyError, TypeError, ValueError) as e:
             logger.warning("Corrupt economy data, reinitializing: %s", e)
@@ -757,5 +765,9 @@ def execute_npc_trade(economy: EconomyState, trade: NPCTrade, tick: int) -> list
     # Update cooldowns
     economy.npc_last_trade_tick[trade.buyer_name] = tick
     economy.npc_last_trade_tick[trade.seller_name] = tick
+
+    # Invalidate needs cache for both parties
+    economy.npc_cached_needs.pop(trade.buyer_name, None)
+    economy.npc_cached_needs.pop(trade.seller_name, None)
 
     return logs
