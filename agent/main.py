@@ -406,15 +406,29 @@ def handle_death(state: GameState):
     state.add_log(f"Lost 10% XP. Current XP: {state.character.xp}")
 
 
+def _should_reevaluate_strategy(combat: Combat, hp_pct: float) -> bool:
+    """Decide whether to call the LLM for a new combat strategy."""
+    if combat.turn == 1:
+        return True
+    if combat.turn % 3 == 1:
+        return True
+    # Re-evaluate when HP crosses 75%/50%/25% boundaries
+    return any(hp_pct <= threshold < hp_pct + 0.1 for threshold in (0.75, 0.5, 0.25))
+
+
 def tick_combat(state: GameState):
     combat = state.combat
     assert combat is not None
 
-    # Low HP intent check
+    # Low HP intent check (fire only once per combat)
     char = state.character
     hp_pct = char.hp / max(1, char.max_hp)
     low_hp_threshold = INTENT_CONFIG.get("low_hp_threshold", 0.35)
-    if hp_pct < low_hp_threshold and combat.ai_strategy != "flee":
+    if (
+        hp_pct < low_hp_threshold
+        and combat.ai_strategy != "flee"
+        and not combat.low_hp_intent_fired
+    ):
         intent = generate_intent(
             "low_hp",
             state,
@@ -426,8 +440,11 @@ def tick_combat(state: GameState):
         state._current_intent = intent.to_dict()
         _intent_log(state, intent)
         strategy = "attack" if intent.decision == "press_on" else intent.decision
-    else:
+        combat.low_hp_intent_fired = True
+    elif _should_reevaluate_strategy(combat, hp_pct):
         strategy = get_combat_strategy(state.character.to_dict(), combat.to_dict())
+    else:
+        strategy = combat.ai_strategy
     combat.ai_strategy = strategy
 
     logs = resolve_round(state.character, combat)

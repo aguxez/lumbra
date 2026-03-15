@@ -314,11 +314,13 @@ class Combat:
     enemy: Enemy
     turn: int = 1
     ai_strategy: str = "attack"
+    low_hp_intent_fired: bool = False
 
     def to_dict(self) -> dict:
         d = self.enemy.to_dict()
         d["turn"] = self.turn
         d["ai_strategy"] = self.ai_strategy
+        d["low_hp_intent_fired"] = self.low_hp_intent_fired
         return d
 
 
@@ -447,6 +449,7 @@ class GameState:
                 "enemy": asdict(self.combat.enemy),
                 "turn": self.combat.turn,
                 "ai_strategy": self.combat.ai_strategy,
+                "low_hp_intent_fired": self.combat.low_hp_intent_fired,
             }
             if self.combat
             else None,
@@ -545,6 +548,7 @@ class GameState:
                 enemy=enemy,
                 turn=data["combat"].get("turn", 1),
                 ai_strategy=data["combat"].get("ai_strategy", "attack"),
+                low_hp_intent_fired=data["combat"].get("low_hp_intent_fired", False),
             )
 
         expeditions = [

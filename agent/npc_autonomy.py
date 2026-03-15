@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from config_loader import NPCS, ZONES, get_npc, get_zone
 from economy import (
     NPC_MAX_SPEND_RATIO,
+    NPC_NEEDS_COOLDOWN,
     NPC_TRADE_COOLDOWN,
     NPCNeed,
     NPCTrade,
@@ -183,6 +184,32 @@ def tick_npc_trades(
         if not ms:
             continue
 
+        # Skip AI evaluation for NPCs still on trade cooldown
+        if state.tick - economy.npc_last_trade_tick.get(name, 0) < NPC_TRADE_COOLDOWN:
+            fallback = fallback_npc_needs(ms, role)
+            if fallback:
+                needs_by_npc[name] = fallback
+            continue
+
+        # Use cached needs if still fresh
+        last_needs = economy.npc_last_needs_tick.get(name, 0)
+        if (
+            state.tick - last_needs < NPC_NEEDS_COOLDOWN
+            and name in economy.npc_cached_needs
+        ):
+            cached = [
+                NPCNeed(
+                    item_type=d["item_type"],
+                    priority=d["priority"],
+                    max_price=d["max_price"],
+                    reason=d["reason"],
+                )
+                for d in economy.npc_cached_needs[name]
+            ]
+            if cached:
+                needs_by_npc[name] = cached
+            continue
+
         ai_needs: list[NPCNeed] | None = None
         if has_ai:
             assert ai_brain_mod is not None
@@ -233,12 +260,22 @@ def tick_npc_trades(
             except Exception:
                 logger.debug("AI needs evaluation failed for %s", name, exc_info=True)
 
-        if ai_needs:
-            needs_by_npc[name] = ai_needs
-        else:
-            fallback = fallback_npc_needs(ms, role)
-            if fallback:
-                needs_by_npc[name] = fallback
+        computed = ai_needs or fallback_npc_needs(ms, role)
+
+        if computed:
+            needs_by_npc[name] = computed
+
+        # Cache computed needs
+        economy.npc_cached_needs[name] = [
+            {
+                "item_type": n.item_type,
+                "priority": n.priority,
+                "max_price": n.max_price,
+                "reason": n.reason,
+            }
+            for n in computed
+        ]
+        economy.npc_last_needs_tick[name] = state.tick
 
     if not needs_by_npc:
         return logs
